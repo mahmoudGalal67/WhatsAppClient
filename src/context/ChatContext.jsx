@@ -1,0 +1,275 @@
+import { createContext, useContext, useEffect, useRef, useState } from "react";
+import { getChats, getMessages, markAsRead, openChatApi, sendMessage } from "../api/chatApi";
+import echo from "../lib/bootstrap";
+
+
+const ChatContext = createContext();
+
+export function ChatProvider({ children }) {
+  const userRef = useRef(JSON.parse(localStorage.getItem("user")) || null);
+  const user = userRef.current;
+
+  const [chats, setChats] = useState([]);
+  const [activeChat, setActiveChat] = useState(null);
+  const [messages, setMessages] = useState([]);
+  const [onlineUsers, setOnlineUsers] = useState([]);
+  const [typingUser, setTypingUser] = useState(null);
+  const [usersInChat, setUsersInChat] = useState([]);
+
+  const [showChat, setShowChat] = useState(false);
+  const [panelStack, setPanelStack] = useState([]);
+
+  const activeChannelRef = useRef(null);
+  const typingTimeoutRef = useRef(null);
+  const [loadingMessages, setLoadingMessages] = useState(false);
+  const [loadingChats, setLoadingChats] = useState(false);
+  const [selectionMode, setSelectionMode] = useState('');
+  const [selectedMessages, setSelectedMessages] = useState([]);
+  const [selectionChatMode, setSelectionChatMode] = useState('');
+  const [selectedChats, setSelectedChats] = useState([]);
+
+
+  /* ---------------- LOADERS ---------------- */
+
+  const loadChats = async () => {
+    const data = await getChats();
+    setChats(data);
+  };
+
+  const loadMessages = async (chatId) => {
+    const { data } = await getMessages(chatId);
+    setMessages(data.reverse());
+  };
+
+  const openChat = async (userId) => {
+    const { data } = await openChatApi(userId);
+    setShowChat(true);
+    setActiveChat(data);
+    loadMessages(data.id);
+  };
+
+  const handleMarkAsRead = async (chatId) => {
+    await markAsRead(chatId);
+  };
+
+  /* ---------------- GLOBAL ONLINE PRESENCE ---------------- */
+
+  useEffect(() => {
+    const channel = echo.join("presence.online");
+
+    channel.here(setOnlineUsers);
+    channel.joining((user) =>
+      setOnlineUsers((prev) => [...prev, user])
+    );
+    channel.leaving((user) =>
+      setOnlineUsers((prev) => prev.filter((u) => u.id !== user.id))
+    );
+
+    return () => echo.leave("presence.online");
+  }, []);
+
+  const isUserOnline = (id) => onlineUsers.some((u) => u.id === id);
+
+  /* ---------------- CHAT REALTIME ---------------- */
+
+  useEffect(() => {
+    if (!activeChat) return;
+
+    // Leave old channel
+    if (activeChannelRef.current) {
+      echo.leave(activeChannelRef.current);
+    }
+
+    const channelName = `private-chat.${activeChat.id}`;
+    activeChannelRef.current = channelName;
+
+    const channel = echo.private(`chat.${activeChat.id}`);
+
+    // 📩 New message
+    channel.listen("MessageSent", (e) => {
+      // Ignore own messages (already added optimistically)
+      if (e.user.id == user.id) return;
+
+      setMessages((prev) => {
+        const exists = prev.some((m) => m.id === e.id);
+        if (exists) return prev;
+        return [...prev, e];
+      });
+    });
+
+    // ✍️ Typing indicator
+    channel.listenForWhisper("typing", (e) => {
+      if (e.user_id === user.id) return;
+
+      setTypingUser(e.user_id);
+
+      clearTimeout(typingTimeoutRef.current);
+      typingTimeoutRef.current = setTimeout(() => {
+        setTypingUser(null);
+      }, 2000);
+    });
+
+    return () => {
+      echo.leave(channelName);
+    };
+  }, [activeChat]);
+
+  /* ---------------- CHAT PRESENCE (VIEWING CHAT) ---------------- */
+
+  useEffect(() => {
+    if (!activeChat) return;
+
+    const presenceChannel = echo.join(`presence.chat.${activeChat.id}`);
+
+    presenceChannel.here(setUsersInChat);
+    presenceChannel.joining((user) =>
+      setUsersInChat((prev) => [...prev, user])
+    );
+    presenceChannel.leaving((user) =>
+      setUsersInChat((prev) => prev.filter((u) => u.id !== user.id))
+    );
+
+    return () => echo.leave(`presence.chat.${activeChat.id}`);
+  }, [activeChat]);
+
+  const isUserViewingChat = (id) =>
+    usersInChat.some((u) => u.id === id);
+
+  console.log('onlineUsers', onlineUsers)
+  console.log('chat', activeChat)
+  console.log('typingUser', typingUser)
+  console.log('usersInChat', usersInChat)
+  console.log('isUserViewingChat', isUserViewingChat)
+
+  /* ---------------- SEND MESSAGE ---------------- */
+
+  const handleSendMessage = async (payload) => {
+    if (!activeChat) return;
+
+    const tempId = Date.now();
+
+    setMessages((prev) => [
+      ...prev,
+      {
+        id: tempId,
+        chat_id: activeChat.id,
+        body: payload.body,
+        type: payload.type,
+        file_path: null,
+        created_at: new Date().toISOString(),
+        user: user,
+        user_id: user.id,
+        pending: true,
+      },
+    ]);
+
+    try {
+      const { data } = await sendMessage(payload);
+
+      // setMessages((prev) =>
+      //   prev.map((m) =>
+      //     m.id === tempId ? { ...data, pending: false } : m
+      //   )
+      // );
+    } catch (err) {
+      console.error(err);
+      setMessages((prev) =>
+        prev.filter((m) => m.id !== tempId)
+      );
+    }
+  };
+
+  /* ---------------- TYPING SEND ---------------- */
+
+  const sendTyping = () => {
+    if (!activeChat) return;
+
+    echo.private(`chat.${activeChat.id}`).whisper("typing", {
+      user_id: user.id,
+    });
+  };
+
+  /* ---------------- UI PANELS ---------------- */
+
+  const openProfile = () => setPanelStack(["profile"]);
+  const openEditProfile = () =>
+    setPanelStack((prev) => [...prev, "editProfile"]);
+  const goBackPanel = () =>
+    setPanelStack((prev) => prev.slice(0, -1));
+  const closeAllPanels = () => setPanelStack([]);
+  const profileOpen = panelStack.includes("profile");
+  const editProfileOpen = panelStack.includes("editProfile");
+
+  /* ---------------- INIT ---------------- */
+
+  useEffect(() => {
+    loadChats();
+  }, []);
+
+
+  // selectiona //
+
+  const toggleMessageSelection = (id) => {
+    setSelectedMessages((prev) =>
+      prev.includes(id) ? prev.filter((m) => m !== id) : [...prev, id],
+    );
+  };
+
+  const clearSelection = () => {
+    setSelectionMode(false);
+    setSelectedMessages([]);
+  };
+
+  const clearChatSelection = () => {
+    setSelectionChatMode(false);
+    setSelectedChats([]);
+  };
+
+
+
+  return (
+    <ChatContext.Provider
+      value={{
+        chats,
+        activeChat,
+        setActiveChat,
+        showChat,
+        messages,
+        loadingMessages,
+        loadingChats,
+        selectionMode,
+        setSelectionMode,
+        selectedMessages,
+        toggleMessageSelection,
+        clearSelection,
+        setMessages,
+        setChats,
+        selectionChatMode,
+        setSelectionChatMode,
+        setSelectedChats,
+        selectedChats,
+        clearChatSelection,
+        openProfile,
+        openEditProfile,
+        goBackPanel,
+        closeAllPanels,
+        profileOpen,
+        editProfileOpen,
+        panelStack,
+        handleMarkAsRead,
+        user,
+        onlineUsers,
+        isUserOnline,
+        usersInChat,
+        isUserViewingChat,
+        loadMessages,
+        sendTyping,
+        handleSendMessage
+      }}
+    >
+      {children}
+    </ChatContext.Provider>
+  );
+}
+
+export const useChat = () => useContext(ChatContext);
