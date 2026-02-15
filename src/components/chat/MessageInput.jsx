@@ -9,34 +9,47 @@ export default function MessageInput({ chatId }) {
   const [text, setText] = useState("");
   const [preview, setPreview] = useState(null);
   const fileRef = useRef();
-  const { handlelSendMessage, selectionMode, profileOpen, selectedMessages, clearSelection, setMessages, activeChat, sendTyping, handleSendMessage } = useChat();
+  const { handlelSendMessage, selectionMode, profileOpen, selectedMessages, clearSelection, setMessages, activeChat, sendTyping, handleSendMessage, UserExistInChat, userIsOnline, user } = useChat();
   const [showDeletePopup, setShowDeletePopup] = useState(false);
 
   const submitText = (e) => {
     e.preventDefault();
-    console.log(text);
     if (!text.trim()) return;
     handleSendMessage({
       chat_id: chatId,
       type: "text",
       body: text,
+      is_delivered: userIsOnline ? true : false,
+      is_seen: UserExistInChat?.id ? true : false,
     });
     setText("");
   };
 
-  const handleImage = (e) => {
+  const handleImage = async (e) => {
     const file = e.target.files[0];
     if (!file) return;
+
+    const tempId = Date.now();
     const imageUrl = URL.createObjectURL(file);
-    setPreview(imageUrl);
+
+    // 2️⃣ Send to backend
     const formData = new FormData();
     formData.append("chat_id", chatId);
     formData.append("type", "image");
-    formData.append("body", file);
-    handlelSendMessage(formData);
-    setPreview(null);
+    formData.append("file", file);
+    formData.append("is_delivered", userIsOnline ? 1 : 0);
+    formData.append("is_seen", UserExistInChat?.id ? 1 : 0);
+
+
+    try {
+      await handleSendMessage(formData);
+    } catch (error) {
+      console.log(error);
+    }
+
     fileRef.current.value = "";
   };
+
 
 
   const handleDelete = () => {
@@ -50,7 +63,7 @@ export default function MessageInput({ chatId }) {
       className={`bg-[#202c33] p-3 relative ${profileOpen ? "w-[66.66%]" : "w-full"}`}
     >
       {/* Image Preview */}
-      {preview && (
+      {/* {preview && (
         <div className="mb-2 relative w-40">
           <img src={preview} className="rounded-lg" />
           <button
@@ -60,7 +73,7 @@ export default function MessageInput({ chatId }) {
             ✕
           </button>
         </div>
-      )}
+      )} */}
 
       <form
         onSubmit={submitText}

@@ -28,7 +28,7 @@ export default function Message({ message }) {
     activeChat
   } = useChat();
   const isSelected = selectedMessages.includes(message.id);
-  const activeUSer = activeChat.users.find(u => u.id == user.id)
+
 
   // Close menu when clicking outside
   useEffect(() => {
@@ -57,12 +57,11 @@ export default function Message({ message }) {
       window.removeEventListener("keydown", handleKeyDown);
     };
   }, [selectionMode]);
-  console.log(activeChat);
 
   return (
     <div className="flex  gap-4 flex-row-reverse">
       <div
-        className={`max-w-[45%] w-fit px-2 py-1 break-all text-left rounded-lg text-sm relative flex items-center gap-3 group relative flex items-end gap-2   ${message.user_id == user.id ? "ml-auto" : "mr-auto"
+        className={`max-w-[45%] w-fit ${message.type === "image" ? "px-1 py-1" : "px-2 py-1"} break-all text-left rounded-lg text-sm relative flex items-center gap-3 group relative flex items-end gap-2   ${message.user_id == user.id ? "ml-auto" : "mr-auto"
           } ${message.user_id == user.id ? "bg-[#005c4b]" : "bg-[#202c33]"
           }`}
         ref={menuRef}
@@ -134,17 +133,24 @@ export default function Message({ message }) {
 
 
         {message.type === "text" && <p>{message.body}</p>}
-        {message.file_path && (
-          <a href={`http://localhost:8000/storage/${message.file_path}`} target="_blank">
-            📎 File
-          </a>
+        {message.type === "image" && (
+          <img
+            src={
+              message.pending
+                ? message.file_path
+                : `http://localhost:8000/storage/${message.file_path}`
+            }
+            className="rounded-lg max-w-xs"
+          />
         )}
 
-        <div className="text-[10px] text-gray-300 text-right mt-2 flex gap-1 justify-end items-end w-14 ">
-          {message.whatsapp_time || formatWhatsAppDate(message.created_at)}
-        </div>
-        <div>
-          {activeUSer.pivot.last_read_at > message.created_at ? 'seen' : 'unseen'}
+        <div className={`flex items-center gap-3 ${message.type === "image" ? "absolute bottom-2 right-4" : ""}`}>
+          <div className="text-[10px] text-gray-300 text-right mt-2 flex gap-1 justify-end items-end w-14 ">
+            {message.whatsapp_time || formatWhatsAppDate(message.created_at)}
+          </div>
+          <div className={`${message.is_seen ? 'text-blue-500' : 'text-white'}`}>
+            {message.user_id != user.id ? "" : message.is_seen || message.is_delivered ? "✓✓" : "✓"}
+          </div>
         </div>
         {/* Hover Arrow */}
         {showArrow && !selectionMode && (

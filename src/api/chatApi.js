@@ -56,6 +56,13 @@ export const getContacts = async () => {
     return data;
 };
 
+export const markAsDeliveredApi = async () => {
+    await axiosInstance.post("/messages/mark-delivered");
+};
+export const markAsSeenApi = async (chatId) => {
+    await axiosInstance.post(`/messages/mark-seen/${chatId}`);
+};
+
 export const sendMessage = async (payload) => {
     const { data } = await axiosInstance.post('/messages', payload);
 
