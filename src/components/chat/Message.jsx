@@ -59,7 +59,9 @@ export default function Message({ message }) {
   }, [selectionMode]);
 
   return (
-    <div className="flex  gap-4 flex-row-reverse">
+    <div className={`flex  gap-4 flex-row-reverse ${selectionMode && selectionMode !== 'reply' ? "p-1 cursor-pointer hover:bg-[#202c33]/40 p-2 rounded-md" : ""} `}
+      onClick={() => toggleMessageSelection(message.id)}
+    >
       <div
         className={`max-w-[45%] w-fit ${message.type === "image" ? "px-1 py-1" : "px-2 py-1"} break-all text-left rounded-lg text-sm relative flex items-center gap-3 group relative flex items-end gap-2   ${message.user_id == user.id ? "ml-auto" : "mr-auto"
           } ${message.user_id == user.id ? "bg-[#005c4b]" : "bg-[#202c33]"
@@ -164,7 +166,7 @@ export default function Message({ message }) {
           </button>
         )}
       </div>
-      {selectionMode && (
+      {selectionMode && selectionMode !== 'reply' && (
         <label className="relative flex items-center cursor-pointer my-auto">
           <input
             type="checkbox"

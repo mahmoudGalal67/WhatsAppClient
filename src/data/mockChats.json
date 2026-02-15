@@ -1,0 +1,209 @@
+{
+  "users": [
+    {
+      "id": 1,
+      "name": "Mahmoud Galal",
+      "email": "mahmoud@example.com",
+      "avatar": "https://i.pravatar.cc/150?img=1",
+      "status": "Building my WhatsApp clone 🚀",
+      "email_verified_at": "2026-02-01T10:00:00Z",
+      "password": "$2y$10$hashedpassword",
+      "created_at": "2026-02-01T09:00:00Z",
+      "updated_at": "2026-02-01T09:00:00Z"
+    },
+    {
+      "id": 2,
+      "name": "Ahmed Ali",
+      "email": "ahmed@example.com",
+      "avatar": "https://i.pravatar.cc/150?img=2",
+      "status": "Available",
+      "email_verified_at": "2026-02-02T10:00:00Z",
+      "password": "$2y$10$hashedpassword",
+      "created_at": "2026-02-02T09:00:00Z",
+      "updated_at": "2026-02-02T09:00:00Z"
+    },
+    {
+      "id": 3,
+      "name": "Sara Mohamed",
+      "email": "sara@example.com",
+      "avatar": "https://i.pravatar.cc/150?img=3",
+      "status": "At work 💻",
+      "email_verified_at": null,
+      "password": "$2y$10$hashedpassword",
+      "created_at": "2026-02-03T09:00:00Z",
+      "updated_at": "2026-02-03T09:00:00Z"
+    }
+  ],
+
+  "fakeChats": [
+    {
+      "id": 1,
+      "is_group": false,
+      "name": null,
+      "users": [ {
+      "id": 1,
+      "name": "Ahmed Ali",
+      "email": "ahmed@example.com",
+      "avatar": "https://i.pravatar.cc/150?img=2",
+      "status": "Available",
+      "email_verified_at": null,
+      "password": "$2y$10$hashedpassword",
+      "created_at": "2026-02-03T09:00:00Z",
+      "updated_at": "2026-02-03T09:00:00Z"
+    }, {
+      "id": 2,
+      "name": "Mahmoud Galal",
+      "email": "mahmoud@example.com",
+      "avatar": "https://i.pravatar.cc/150?img=1",
+      "status": "Building my WhatsApp clone 🚀",
+      "email_verified_at": "2026-02-01T10:00:00Z",
+      "password": "$2y$10$hashedpassword",
+      "created_at": "2026-02-01T09:00:00Z",
+      "updated_at": "2026-02-01T09:00:00Z"
+    }],
+      "created_at": "2026-02-10T08:00:00Z",
+      "updated_at": "2026-02-10T08:00:00Z",
+
+      "messages": [
+        {
+          "id": 1,
+          "chat_id": 1,
+          "user_id": 1,
+          "type": "text",
+          "body": "Hey Ahmed 👋",
+          "file_path": null,
+          "reply_to": null,
+          "forwarded_from": null,
+          "is_delivered": true,
+          "delivered_at": "2026-02-10T08:01:00Z",
+          "is_seen": true,
+          "seen_at": "2026-02-10T08:02:00Z",
+          "created_at": "2026-02-10T08:00:30Z",
+          "updated_at": "2026-02-10T08:00:30Z"
+        },
+        {
+          "id": 2,
+          "chat_id": 1,
+          "user_id": 2,
+          "type": "text",
+          "body": "Hey bro! How are you?",
+          "file_path": null,
+          "reply_to": 1,
+          "forwarded_from": null,
+          "is_delivered": true,
+          "delivered_at": "2026-02-10T08:03:00Z",
+          "is_seen": true,
+          "seen_at": "2026-02-10T08:03:30Z",
+          "created_at": "2026-02-10T08:02:50Z",
+          "updated_at": "2026-02-10T08:02:50Z"
+        },
+        {
+          "id": 3,
+          "chat_id": 1,
+          "user_id": 1,
+          "type": "image",
+          "body": null,
+          "file_path": "/storage/images/project.png",
+          "reply_to": null,
+          "forwarded_from": null,
+          "is_delivered": true,
+          "delivered_at": "2026-02-10T08:05:00Z",
+          "is_seen": false,
+          "seen_at": null,
+          "created_at": "2026-02-10T08:04:30Z",
+          "updated_at": "2026-02-10T08:04:30Z"
+        }
+      ]
+    },
+
+    {
+      "id": 2,
+      "is_group": true,
+      "name": "React Dev Team",
+      "users": [ {
+      "id": 1,
+      "name": "Ahmed Ali",
+      "email": "ahmed@example.com",
+      "avatar": "https://i.pravatar.cc/150?img=2",
+      "status": "Available",
+      "email_verified_at": null,
+      "password": "$2y$10$hashedpassword",
+      "created_at": "2026-02-03T09:00:00Z",
+      "updated_at": "2026-02-03T09:00:00Z"
+    }, {
+      "id": 2,
+      "name": "Mahmoud Galal",
+      "email": "mahmoud@example.com",
+      "avatar": "https://i.pravatar.cc/150?img=1",
+      "status": "Building my WhatsApp clone 🚀",
+      "email_verified_at": "2026-02-01T10:00:00Z",
+      "password": "$2y$10$hashedpassword",
+      "created_at": "2026-02-01T09:00:00Z",
+      "updated_at": "2026-02-01T09:00:00Z"
+    }, {
+      "id": 3,
+      "name": "Sara Mohamed",
+      "email": "sara@example.com",
+      "avatar": "https://i.pravatar.cc/150?img=3",
+      "status": "At work 💻",
+      "email_verified_at": null,
+      "password": "$2y$10$hashedpassword",
+      "created_at": "2026-02-03T09:00:00Z",
+      "updated_at": "2026-02-03T09:00:00Z"
+    }],
+      "created_at": "2026-02-11T09:00:00Z",
+      "updated_at": "2026-02-11T09:00:00Z",
+
+      "messages": [
+        {
+          "id": 4,
+          "chat_id": 2,
+          "user_id": 3,
+          "type": "text",
+          "body": "Good morning team 🌞",
+          "file_path": null,
+          "reply_to": null,
+          "forwarded_from": null,
+          "is_delivered": true,
+          "delivered_at": "2026-02-11T09:01:00Z",
+          "is_seen": true,
+          "seen_at": "2026-02-11T09:02:00Z",
+          "created_at": "2026-02-11T09:00:30Z",
+          "updated_at": "2026-02-11T09:00:30Z"
+        },
+        {
+          "id": 5,
+          "chat_id": 2,
+          "user_id": 1,
+          "type": "pdf",
+          "body": null,
+          "file_path": "/storage/files/specification.pdf",
+          "reply_to": null,
+          "forwarded_from": null,
+          "is_delivered": true,
+          "delivered_at": "2026-02-11T09:05:00Z",
+          "is_seen": false,
+          "seen_at": null,
+          "created_at": "2026-02-11T09:04:30Z",
+          "updated_at": "2026-02-11T09:04:30Z"
+        },
+        {
+          "id": 6,
+          "chat_id": 2,
+          "user_id": 2,
+          "type": "text",
+          "body": "Forwarded this from Ahmed & Mahmoud chat",
+          "file_path": null,
+          "reply_to": null,
+          "forwarded_from": 2,
+          "is_delivered": true,
+          "delivered_at": "2026-02-11T09:06:00Z",
+          "is_seen": false,
+          "seen_at": null,
+          "created_at": "2026-02-11T09:05:50Z",
+          "updated_at": "2026-02-11T09:05:50Z"
+        }
+      ]
+    }
+  ]
+}

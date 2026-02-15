@@ -2,6 +2,7 @@ import { createContext, useContext, useEffect, useRef, useState } from "react";
 import { getChats, getMessages, markAsDeliveredApi, markAsRead, markAsSeenApi, openChatApi, sendMessage } from "../api/chatApi";
 import echo from "../lib/bootstrap";
 
+import { fakeChats } from "../data/mockChats";
 
 const ChatContext = createContext();
 
@@ -37,24 +38,23 @@ export function ChatProvider({ children }) {
   );
 
 
-
   /* ---------------- LOADERS ---------------- */
 
   const loadChats = async () => {
-    const data = await getChats();
-    setChats(data);
+    // const data = await getChats();
+    setChats(fakeChats);
   };
 
   const loadMessages = async (chatId) => {
-    const { data } = await getMessages(chatId);
-    setMessages(data.reverse());
+    // const { data } = await getMessages(chatId);
+    setMessages(fakeChats[0].messages.reverse());
   };
 
   const openChat = async (userId) => {
-    const { data } = await openChatApi(userId);
+    // const { data } = await openChatApi(userId);
     setShowChat(true);
-    setActiveChat(data);
-    loadMessages(data.id);
+    setActiveChat(fakeChats[0]);
+    loadMessages(fakeChats[0].id);
   };
 
   const handleMarkAsRead = async (chatId) => {

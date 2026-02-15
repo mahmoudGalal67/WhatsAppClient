@@ -10,7 +10,8 @@ export default function ChatItem({ chat }) {
   const [showArrow, setshowArrow] = useState(false);
   const menuRef = useRef(null);
 
-  const otherUser = chat.users.find(u => u.id !== user.id);
+  // const otherUser = chat.users.find(u => u.id !== user.id);
+  const otherUser = chat.users[0];
   const isSelected = selectedChats.includes(chat.id);
 
   const toggleChatSelection = (id) => {

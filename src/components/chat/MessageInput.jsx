@@ -1,16 +1,37 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { useChat } from "../../context/ChatContext";
 import { ImageIcon, SendHorizonal } from "lucide-react";
 import SelectionBar from "./SelectionBar";
 import DeletePopup from "./DeletePopup";
 import { deleteMessages } from "../../api/chatApi";
 
+import EmojiPicker from "emoji-picker-react";
+import { Smile } from "lucide-react";
+import ReplyMessage from "./ReplyMessage";
+
 export default function MessageInput({ chatId }) {
   const [text, setText] = useState("");
+  const [showEmoji, setShowEmoji] = useState(false);
+const emojiRef = useRef(null);
   const [preview, setPreview] = useState(null);
   const fileRef = useRef();
   const { handlelSendMessage, selectionMode, profileOpen, selectedMessages, clearSelection, setMessages, activeChat, sendTyping, handleSendMessage, UserExistInChat, userIsOnline, user } = useChat();
   const [showDeletePopup, setShowDeletePopup] = useState(false);
+
+const onEmojiClick = (emojiData) => {
+  setText((prev) => prev + emojiData.emoji);
+};
+
+useEffect(() => {
+  const handleClickOutside = (e) => {
+    if (emojiRef.current && !emojiRef.current.contains(e.target)) {
+      setShowEmoji(false);
+    }
+  };
+  document.addEventListener("click", handleClickOutside);
+  return () => document.removeEventListener("click", handleClickOutside);
+}, []);
+
 
   const submitText = (e) => {
     e.preventDefault();
@@ -94,14 +115,28 @@ export default function MessageInput({ chatId }) {
           hidden
           onChange={handleImage}
         />
+<div ref={emojiRef} className="relative z-1 top-0 left-0">
+  <button
+    type="button"
+    onClick={() => setShowEmoji((prev) => !prev)}
+    className="text-gray-400 absolute left-1 top-1/2 -translate-y-1/2 cursor-pointer"
+  >
+    <Smile size={22} />
+  </button>
 
+  {showEmoji && (
+    <div className="absolute bottom-1/2 left-16 z-50 emoji-container">
+      <EmojiPicker onEmojiClick={onEmojiClick}   theme="dark" />
+    </div>
+  )}
+</div>
         <input
           value={text}
           onChange={(e) => {
             setText(e.target.value)
             sendTyping();
           }}
-          className="flex-1 px-4 py-2  outline-none text-sm"
+          className="flex-1 px-8 py-2  outline-none text-sm"
           placeholder="Type a message"
         />
 
@@ -122,9 +157,11 @@ export default function MessageInput({ chatId }) {
           </button>
         )}
       </form>
-      {selectionMode && (
+      { selectionMode === 'reply' ? <ReplyMessage/> : selectionMode  ? (
         <SelectionBar />
-      )}
+      ) : null}
+
+
 
     </div>
   );
