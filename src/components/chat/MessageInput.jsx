@@ -9,28 +9,55 @@ import EmojiPicker from "emoji-picker-react";
 import { Smile } from "lucide-react";
 import ReplyMessage from "./ReplyMessage";
 
-export default function MessageInput({ chatId }) {
+export default function MessageInput({ chatId, selectedReplyMessage, setSelectedReplyMessage }) {
   const [text, setText] = useState("");
   const [showEmoji, setShowEmoji] = useState(false);
-const emojiRef = useRef(null);
+  const emojiRef = useRef(null);
   const [preview, setPreview] = useState(null);
   const fileRef = useRef();
   const { handlelSendMessage, selectionMode, profileOpen, selectedMessages, clearSelection, setMessages, activeChat, sendTyping, handleSendMessage, UserExistInChat, userIsOnline, user } = useChat();
   const [showDeletePopup, setShowDeletePopup] = useState(false);
+  let actionComponent;
 
-const onEmojiClick = (emojiData) => {
-  setText((prev) => prev + emojiData.emoji);
-};
-
-useEffect(() => {
-  const handleClickOutside = (e) => {
-    if (emojiRef.current && !emojiRef.current.contains(e.target)) {
-      setShowEmoji(false);
+  {
+    switch (selectionMode) {
+      case 'reply':
+        actionComponent = <ReplyMessage selectedReplyMessage={selectedReplyMessage} setSelectedReplyMessage={setSelectedReplyMessage} />;
+        break;
+      case 'delete':
+        actionComponent = <SelectionBar />;
+        break;
+      case 'copy':
+        actionComponent = <SelectionBar />;
+        break;
+      case 'forward':
+        actionComponent = <SelectionBar />;
+        break;
+      case 'star':
+        actionComponent = <SelectionBar />;
+        break;
+      case 'report':
+        actionComponent = <SelectionBar />;
+        break;
+      default:
+        actionComponent = null;
     }
+  }
+
+
+  const onEmojiClick = (emojiData) => {
+    setText((prev) => prev + emojiData.emoji);
   };
-  document.addEventListener("click", handleClickOutside);
-  return () => document.removeEventListener("click", handleClickOutside);
-}, []);
+
+  useEffect(() => {
+    const handleClickOutside = (e) => {
+      if (emojiRef.current && !emojiRef.current.contains(e.target)) {
+        setShowEmoji(false);
+      }
+    };
+    document.addEventListener("click", handleClickOutside);
+    return () => document.removeEventListener("click", handleClickOutside);
+  }, []);
 
 
   const submitText = (e) => {
@@ -40,10 +67,14 @@ useEffect(() => {
       chat_id: chatId,
       type: "text",
       body: text,
-      is_delivered: userIsOnline ? true : false,
-      is_seen: UserExistInChat?.id ? true : false,
+      is_delivered: userIsOnline ? 1 : 0,
+      is_seen: UserExistInChat?.id ? 1 : 0,
+      reply_to: selectedReplyMessage?.id || null,
+      reply_message: selectedReplyMessage,
     });
     setText("");
+    setSelectedReplyMessage(null);
+    clearSelection();
   };
 
   const handleImage = async (e) => {
@@ -115,21 +146,21 @@ useEffect(() => {
           hidden
           onChange={handleImage}
         />
-<div ref={emojiRef} className="relative z-1 top-0 left-0">
-  <button
-    type="button"
-    onClick={() => setShowEmoji((prev) => !prev)}
-    className="text-gray-400 absolute left-1 top-1/2 -translate-y-1/2 cursor-pointer"
-  >
-    <Smile size={22} />
-  </button>
+        <div ref={emojiRef} className="relative z-1 top-0 left-0">
+          <button
+            type="button"
+            onClick={() => setShowEmoji((prev) => !prev)}
+            className="text-gray-400 absolute left-1 top-1/2 -translate-y-1/2 cursor-pointer"
+          >
+            <Smile size={22} />
+          </button>
 
-  {showEmoji && (
-    <div className="absolute bottom-1/2 left-16 z-50 emoji-container">
-      <EmojiPicker onEmojiClick={onEmojiClick}   theme="dark" />
-    </div>
-  )}
-</div>
+          {showEmoji && (
+            <div className="absolute bottom-1/2 left-16 z-50 emoji-container">
+              <EmojiPicker onEmojiClick={onEmojiClick} theme="dark" />
+            </div>
+          )}
+        </div>
         <input
           value={text}
           onChange={(e) => {
@@ -157,12 +188,7 @@ useEffect(() => {
           </button>
         )}
       </form>
-      { selectionMode === 'reply' ? <ReplyMessage/> : selectionMode  ? (
-        <SelectionBar />
-      ) : null}
-
-
-
+      {actionComponent}
     </div>
   );
 }

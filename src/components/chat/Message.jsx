@@ -13,7 +13,7 @@ import {
 import Delivered from "../icons/delevired";
 import { formatWhatsAppDate } from "../../utils/formatWhatsAppDate";
 
-export default function Message({ message }) {
+export default function Message({ message, selectedReplyMessage, setSelectedReplyMessage }) {
   const [messageOption, setmessageOption] = useState(false);
   const [showArrow, setshowArrow] = useState(false);
   const menuRef = useRef(null);
@@ -79,6 +79,7 @@ export default function Message({ message }) {
               onClick={() => {
                 setmessageOption(false);
                 setSelectionMode('reply');
+                setSelectedReplyMessage(message);
                 toggleMessageSelection(message.id);
               }}
             />
@@ -134,24 +135,36 @@ export default function Message({ message }) {
         )}
 
 
-        {message.type === "text" && <p>{message.body}</p>}
-        {message.type === "image" && (
-          <img
-            src={
-              message.pending
-                ? message.file_path
-                : `http://localhost:8000/storage/${message.file_path}`
-            }
-            className="rounded-lg max-w-xs"
-          />
-        )}
+        <div className="flex flex-col w-full">
+          {message.reply_to && (
+            <div className="bg-[#103E2C] w-full p-1 rounded-md border-l-3 border-green-400">
+              <h3 className="text-sm text-green-400 mb-1">You</h3>
+              <div className="text-sm text-gray-400 mb-1">
+                {message.reply_message?.body}
+              </div>
+            </div>
+          )}
+          <div className="flex items-center gap-2">
+            {message.type === "text" && <p>{message.body}</p>}
+            {message.type === "image" && (
+              <img
+                src={
+                  message.pending
+                    ? message.file_path
+                    : `http://localhost:8000/storage/${message.file_path}`
+                }
+                className="rounded-lg max-w-xs"
+              />
+            )}
 
-        <div className={`flex items-center gap-3 ${message.type === "image" ? "absolute bottom-2 right-4" : ""}`}>
-          <div className="text-[10px] text-gray-300 text-right mt-2 flex gap-1 justify-end items-end w-14 ">
-            {message.whatsapp_time || formatWhatsAppDate(message.created_at)}
-          </div>
-          <div className={`${message.is_seen ? 'text-blue-500' : 'text-white'}`}>
-            {message.user_id != user.id ? "" : message.is_seen || message.is_delivered ? "✓✓" : "✓"}
+            <div className={`flex items-center gap-3 ${message.type === "image" ? "absolute bottom-2 right-4" : ""}`}>
+              <div className="text-[10px] text-gray-300 text-right mt-2 flex gap-1 justify-end items-end w-14 ">
+                {message.whatsapp_time || formatWhatsAppDate(message.created_at)}
+              </div>
+              <div className={`${message.is_seen ? 'text-blue-500' : 'text-white'}`}>
+                {message.user_id != user.id ? "" : message.is_seen || message.is_delivered ? "✓✓" : "✓"}
+              </div>
+            </div>
           </div>
         </div>
         {/* Hover Arrow */}

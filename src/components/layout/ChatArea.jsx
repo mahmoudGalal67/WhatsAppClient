@@ -17,6 +17,7 @@ import { ChatHeaderSkeleton, MessagesSkeleton } from "../chat/Loading";
 export default function ChatArea() {
   const { activeChat, closeChat, showChat, setConversations, setActiveChat, profileOpen, openProfile, loadingMessages } = useChat();
 
+  const [selectedReplyMessage, setSelectedReplyMessage] = useState(null);
 
   const [open, setOpen] = useState(false);
   const menuRef = useRef(null);
@@ -130,8 +131,8 @@ export default function ChatArea() {
         </div>
       </div>
       <ProfilePanel />
-      <MessageList />
-      <MessageInput chatId={activeChat?.id} />
+      <MessageList selectedReplyMessage={selectedReplyMessage} setSelectedReplyMessage={setSelectedReplyMessage} />
+      <MessageInput chatId={activeChat?.id} selectedReplyMessage={selectedReplyMessage} setSelectedReplyMessage={setSelectedReplyMessage} />
       <EditProfilePanel />
       <ProfilePanel />
     </main>

@@ -2,7 +2,7 @@ import { createContext, useContext, useEffect, useRef, useState } from "react";
 import { getChats, getMessages, markAsDeliveredApi, markAsRead, markAsSeenApi, openChatApi, sendMessage } from "../api/chatApi";
 import echo from "../lib/bootstrap";
 
-import { fakeChats } from "../data/mockChats";
+// import { fakeChats } from "../data/mockChats";
 
 const ChatContext = createContext();
 
@@ -41,20 +41,24 @@ export function ChatProvider({ children }) {
   /* ---------------- LOADERS ---------------- */
 
   const loadChats = async () => {
-    // const data = await getChats();
-    setChats(fakeChats);
+    const data = await getChats();
+    // setChats(fakeChats);
+    setChats(data);
   };
 
   const loadMessages = async (chatId) => {
-    // const { data } = await getMessages(chatId);
-    setMessages(fakeChats[0].messages.reverse());
+    const { data } = await getMessages(chatId);
+    setMessages(data.reverse());
+    // setMessages(fakeChats[0].messages.reverse());
   };
 
   const openChat = async (userId) => {
-    // const { data } = await openChatApi(userId);
+    const { data } = await openChatApi(userId);
     setShowChat(true);
-    setActiveChat(fakeChats[0]);
-    loadMessages(fakeChats[0].id);
+    setActiveChat(data);
+    loadMessages(data.id);
+    // setActiveChat(fakeChats[0]);
+    // loadMessages(fakeChats[0].id);
   };
 
   const handleMarkAsRead = async (chatId) => {
@@ -217,8 +221,10 @@ export function ChatProvider({ children }) {
         created_at: new Date().toISOString(),
         user: user,
         user_id: user.id,
-        is_delivered: userIsOnline ? true : false,
-        is_seen: UserExistInChat?.id ? true : false,
+        is_delivered: userIsOnline ? 1 : 0,
+        is_seen: UserExistInChat?.id ? 1 : 0,
+        reply_to: payload.reply_to,
+        reply_message: payload.reply_message,
         pending: true,
       },
     ]);
@@ -229,7 +235,7 @@ export function ChatProvider({ children }) {
       // 3️⃣ Replace temp message
       setMessages((prev) =>
         prev.map((m) =>
-          m.id === tempId ? { ...response, pending: false } : m
+          m.id === tempId ? { ...response, pending: false, is_delivered: userIsOnline ? 1 : 0, is_seen: UserExistInChat?.id ? 1 : 0 } : m
         )
       );
       return response;
