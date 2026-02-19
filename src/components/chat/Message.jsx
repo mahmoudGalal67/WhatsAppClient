@@ -127,7 +127,7 @@ export default function Message({ message, selectedReplyMessage, setSelectedRepl
                 setSelectionMode('delete');
                 toggleMessageSelection(message.id);
               }}
-              text="Delete chat"
+              text="Delete Message"
               danger
               icon={<TrashIcon width={16} height={16} />}
             />
@@ -145,8 +145,8 @@ export default function Message({ message, selectedReplyMessage, setSelectedRepl
             </div>
           )}
           <div className="flex items-center gap-2">
-            {message.type === "text" && <p>{message.body}</p>}
-            {message.type === "image" && (
+            {message.is_deleted ? <p className="text-gray-400 italic ">This message was deleted</p> : message.type === "text" && <p>{message.body}</p>}
+            {!message.is_deleted && message.type === "image" && (
               <img
                 src={
                   message.pending

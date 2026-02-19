@@ -1,15 +1,24 @@
-import { X, Search, Send, SendHorizonal, SendHorizonalIcon } from "lucide-react";
+import { X, Search, Send, SendHorizonal, SendHorizonalIcon, Loader2 } from "lucide-react";
 import Avatar from "../common/Avatar";
 import { useEffect, useRef, useState } from "react";
+import { useChat } from "../../context/ChatContext";
+import { forwardMessage } from "../../api/chatApi";
 
-export default function ContactsModal({ chats = [], onClose, onSend }) {
-    const [selected, setSelected] = useState([]);
+export default function ChatsModal({ onClose }) {
+    const { chats, currentUser, selectedMessages, setSelectionMode } = useChat()
+    const [selectedChats, setSelectedChats] = useState([]);
     const [search, setSearch] = useState("");
     const [show, setShow] = useState(false); // controls animation
+    const [loading, setLoading] = useState(false);
     const menuRef = useRef(null);
 
-    onSend = (selected) => {
-        console.log(selected);
+
+    const handleSend = async () => {
+        setLoading(true)
+        await forwardMessage({ target_chat_ids: selectedChats, message_ids: selectedMessages })
+        setLoading(false)
+        handleClose();
+        setSelectionMode(false)
     };
     const handleClose = () => {
         setShow(false);
@@ -17,6 +26,15 @@ export default function ContactsModal({ chats = [], onClose, onSend }) {
     };
 
 
+    const toggleSelect = (id) => {
+        setSelectedChats((prev) =>
+            prev.includes(id) ? prev.filter((c) => c !== id) : [...prev, id]
+        );
+    };
+
+    const filteredChats = chats.filter((chat) =>
+        chat.users.find(user => user.id !== currentUser.id && user.name?.toLowerCase().includes(search.toLowerCase()) || user.phone_number?.toLowerCase().includes(search.toLowerCase()))
+    );
     // Close menu when clicking outside
     useEffect(() => {
         const handler = (e) => {
@@ -31,16 +49,6 @@ export default function ContactsModal({ chats = [], onClose, onSend }) {
     useEffect(() => {
         setTimeout(() => setShow(true), 10); // trigger animation after mount
     }, []);
-
-    const toggleSelect = (id) => {
-        setSelected((prev) =>
-            prev.includes(id) ? prev.filter((c) => c !== id) : [...prev, id]
-        );
-    };
-
-    const filteredChats = chats.filter((chat) =>
-        chat.contactName.toLowerCase().includes(search.toLowerCase())
-    );
 
     return (
         <div
@@ -63,7 +71,7 @@ export default function ContactsModal({ chats = [], onClose, onSend }) {
                 </div>
 
                 {/* Search */}
-                <div className="p-4 border-b border-[#2a3942]" onClick={() => setFocus(true)}>
+                <div className="p-4 border-b border-[#2a3942]">
                     <div className="flex items-center gap-3 px-4 py-2 focus-within:border-[#25d366] border-[#2a3942] rounded-full border-2 bg-[#0b141a]">
                         <Search size={18} className="text-gray-400" />
                         <input
@@ -80,7 +88,7 @@ export default function ContactsModal({ chats = [], onClose, onSend }) {
 
                 <div className="max-h-[400px] overflow-y-auto px-2 pb-3 space-y-1">
                     {filteredChats.map((chat) => {
-                        const isSelected = selected.includes(chat.id);
+                        const isSelected = selectedChats.includes(chat.id);
 
                         return (
                             <div
@@ -111,11 +119,11 @@ export default function ContactsModal({ chats = [], onClose, onSend }) {
 
                                 <div className="flex flex-col gap-1">
                                     <span className="text-sm font-medium text-white">
-                                        {chat.contactName}
+                                        {chat.users.find(user => user.id !== currentUser.id).name}
                                     </span>
-                                    {chat.phoneNumber && (
+                                    {chat.users.find(user => user.id !== currentUser.id).phone_number && (
                                         <span className="text-xs text-gray-400 truncate max-w-xs">
-                                            {chat.phoneNumber}
+                                            {chat.users.find(user => user.id !== currentUser.id).phone_number}
                                         </span>
                                     )}
                                 </div>
@@ -124,13 +132,14 @@ export default function ContactsModal({ chats = [], onClose, onSend }) {
                     })}
                 </div>
 
-                {selected.length > 0 && (
+                {selectedChats.length > 0 && (
                     <div className="p-4 border-t border-[#2a3942] flex justify-end">
                         <button
-                            onClick={() => onSend(selected)}
+                            onClick={handleSend}
+                            disabled={loading}
                             className="bg-[#25d366] hover:bg-[#20bd5c] hover:scale-105 text-black font-semibold px-6 py-2 flex items-center gap-2 rounded-full transition cursor-pointer "
                         >
-                            ({selected.length}) <SendHorizonalIcon size={24} fill="#25d366" stroke="black" strokeWidth="2" />
+                            {loading ? <Loader2 size={24} className="animate-spin" /> : <><SendHorizonalIcon size={24} fill="#25d366" stroke="black" strokeWidth="2" />{selectedChats.length}</>}
                         </button>
                     </div>
                 )}

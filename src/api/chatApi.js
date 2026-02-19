@@ -17,20 +17,28 @@ export const RegisterRequest = async (form) => {
     return data;
 };
 
+// Contacts
+
+export const getContacts = async () => {
+    const { data } = await axiosInstance.get("/users");
+    return data;
+};
+
+
+// Chats
+
 export const getChats = async () => {
     const { data } = await axiosInstance.get("/chats");
     return data;
 };
 
 export const addChat = async (payload) => {
-    const { data } = await axiosInstance.post("/chats/by-phone", { phoneNumber: payload.phoneNumber, name: payload.name, imageUrl: payload.imageUrl });
+    const { data } = await axiosInstance.post("/chats/private", { user_one_id: payload.user_one_id, other_user_ids: payload.other_user_ids });
     return data;
 };
-export const deleteChat = async (id) => {
-    const { data } = await axiosInstance.delete(`/chats/${id}`);
-};
+
 export const deleteChats = async (ids) => {
-    const { data } = await axiosInstance.post(`/chats/bulk-delete`, { chatIds: ids });
+    const { data } = await axiosInstance.post(`/chats/delete`, { chat_ids: ids });
 };
 
 export const openChatApi = async (userId) => {
@@ -38,29 +46,12 @@ export const openChatApi = async (userId) => {
     return data;
 }
 
-export const markAsRead = async (chatId) => {
-    await axiosInstance.post(`/chats/${chatId}/read`);
-};
+
+// Messages
 
 export const getMessages = async (chatId) => {
     const { data } = await axiosInstance.get(`/chats/${chatId}/messages`);
     return data;
-};
-export const deleteMessages = async (chatId, messageIds) => {
-    const { data } = await axiosInstance.delete(`/chats/${chatId}/messages/bulk`, { data: { messageIds } });
-    return data;
-};
-
-export const getContacts = async () => {
-    const { data } = await axiosInstance.get("/contacts");
-    return data;
-};
-
-export const markAsDeliveredApi = async () => {
-    await axiosInstance.post("/messages/mark-delivered");
-};
-export const markAsSeenApi = async (chatId) => {
-    await axiosInstance.post(`/messages/mark-seen/${chatId}`);
 };
 
 export const sendMessage = async (payload) => {
@@ -68,3 +59,21 @@ export const sendMessage = async (payload) => {
 
     return data;
 };
+
+export const deleteMessages = async (target_chat_id, message_ids, type = 'everyone') => {
+    const { data } = await axiosInstance.post(`/messages/delete-multiple`, { target_chat_id, message_ids, type });
+    return data;
+};
+
+export const markAsDeliveredApi = async () => {
+    await axiosInstance.post("/messages/mark-delivered");
+};
+
+export const markAsSeenApi = async (chatId) => {
+    await axiosInstance.post(`/messages/mark-seen/${chatId}`);
+};
+
+export const forwardMessage = async (payload) => {
+    await axiosInstance.post("/messages/forward", { message_ids: payload.message_ids, target_chat_ids: payload.target_chat_ids });
+};
+

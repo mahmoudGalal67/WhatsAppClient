@@ -1,12 +1,12 @@
 import { useChat } from "../../context/ChatContext";
 import { Copy, Flag, Forward, Reply, Star, Trash2, X } from "lucide-react";
-import ContactsModal from "./ContactsModal";
 import { useState } from "react";
+import DeletePopup from "./DeletePopup";
 
-export default function SelectionBar({ onDelete }) {
-  const { selectionMode, selectedMessages, clearSelection, conversations } = useChat();
+export default function SelectionBar({ handleClick }) {
+  const { selectionMode, selectedMessages, clearSelection } = useChat();
 
-  const [showForwaardedContacts, setShowForwaardedContacts] = useState(false);
+  const [confirmDelete, setConfirmDelete] = useState(false);
 
   return (
     <div className="h-14 bg-[#202c33] flex items-center justify-between px-4 border-b border-[#2a3942] absolute bottom-0 left-0 right-0 z-10">
@@ -18,21 +18,23 @@ export default function SelectionBar({ onDelete }) {
       </div>
 
       <button
-        onClick={onDelete}
+        onClick={() => setConfirmDelete(true)}
         className="text-red-400 hover:text-red-600 transition cursor-pointer"
       >
         {selectionMode === 'delete' && <Trash2 size={25} color="red" />}
         {selectionMode === 'copy' && <Copy size={25} color="blue" />}
-        {selectionMode === 'forward' && selectedMessages.length !== 0 && <Forward size={25} color="green" onClick={() => setShowForwaardedContacts(true)} />}
+        {selectionMode === 'forward' && selectedMessages.length !== 0 && <Forward size={25} color="green" />}
         {selectionMode === 'star' && <Star size={25} color="yellow" />}
         {selectionMode === 'report' && <Flag size={25} color="orange" />}
         {selectionMode === 'reply' && <Reply size={25} color="purple" />}
       </button>
 
-      {showForwaardedContacts && (
-        <ContactsModal onClose={() => setShowForwaardedContacts(false)} chats={conversations} />
-      )}
 
+      {
+        confirmDelete && (
+          <DeletePopup onClose={() => setConfirmDelete(false)} onDelete={handleClick} />
+        )
+      }
     </div>
   );
 }

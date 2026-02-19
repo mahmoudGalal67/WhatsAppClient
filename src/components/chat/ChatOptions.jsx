@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { X } from "lucide-react";
+import { deleteChats } from "../../api/chatApi";
 
 export default function ChatOptions({ onClose, option }) {
     const [message, setMessage] = useState("");
@@ -41,6 +42,16 @@ export default function ChatOptions({ onClose, option }) {
         }
     };
 
+
+    const handleDeleteChats = async () => {
+        try {
+            await deleteChats();
+            onClose();
+        } catch (err) {
+            console.error(err);
+            alert("Failed to delete chats");
+        }
+    };
     return (
         <div ref={menuRef} className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50">
             {option && (
@@ -91,7 +102,7 @@ export default function ChatOptions({ onClose, option }) {
                             <button onClick={onClose} className="text-green-400 cursor-pointer hover:text-green-500 transition-colors hover:bg-green-500/10 px-4 py-2 rounded-3xl">
                                 Cancel
                             </button>
-                            <button className="text-black font-semibold bg-green-500 px-8 py-2 rounded-3xl cursor-pointer hover:bg-green-600 transition-colors">
+                            <button onClick={handleDeleteChats} className="text-black font-semibold bg-green-500 px-8 py-2 rounded-3xl cursor-pointer hover:bg-green-600 transition-colors">
                                 Delete for me
                             </button>
                         </div>

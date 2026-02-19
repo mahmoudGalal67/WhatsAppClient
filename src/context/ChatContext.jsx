@@ -1,5 +1,5 @@
 import { createContext, useContext, useEffect, useRef, useState } from "react";
-import { getChats, getMessages, markAsDeliveredApi, markAsRead, markAsSeenApi, openChatApi, sendMessage } from "../api/chatApi";
+import { getChats, getMessages, markAsDeliveredApi, markAsSeenApi, openChatApi, sendMessage } from "../api/chatApi";
 import echo from "../lib/bootstrap";
 
 // import { fakeChats } from "../data/mockChats";
@@ -61,16 +61,6 @@ export function ChatProvider({ children }) {
     // loadMessages(fakeChats[0].id);
   };
 
-  const handleMarkAsRead = async (chatId) => {
-    await markAsRead(chatId);
-  };
-
-  const handleDelivered = async () => {
-    await markAsDeliveredApi();
-    if (activeChat) {
-      loadMessages(activeChat.id);
-    }
-  };
 
   const handleSeen = async (users) => {
     if (!activeChat) return;
@@ -203,7 +193,6 @@ export function ChatProvider({ children }) {
 
 
 
-
   /* ---------------- SEND MESSAGE ---------------- */
 
   const handleSendMessage = async (payload) => {
@@ -324,7 +313,6 @@ export function ChatProvider({ children }) {
         profileOpen,
         editProfileOpen,
         panelStack,
-        handleMarkAsRead,
         user,
         onlineUsers,
         isUserOnline,
@@ -333,7 +321,8 @@ export function ChatProvider({ children }) {
         sendTyping,
         handleSendMessage,
         UserExistInChat,
-        typingUser
+        typingUser,
+        currentUser: user
       }}
     >
       {children}

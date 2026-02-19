@@ -1,7 +1,7 @@
 import { useEffect, useRef } from "react";
 import { useChat } from "../../context/ChatContext";
 
-export default function DeletePopup({ onClose, handleDelete }) {
+export default function DeletePopup({ onClose, onDelete }) {
   const { clearSelection } = useChat();
   const menuRef = useRef(null);
 
@@ -17,7 +17,7 @@ export default function DeletePopup({ onClose, handleDelete }) {
   }, []);
 
   const DeleteFunction = () => {
-    handleDelete();
+    onDelete();
     clearSelection();
     onClose();
   };

@@ -7,9 +7,11 @@ import { useChat } from "../../context/ChatContext";
 import NewChatModal from "../chat/NewChatModal";
 import ChatOptions from "../chat/ChatOptions";
 import DeletePopup from "../chat/DeletePopup";
+import NewContactModal from "../chat/NewContactModal";
+import { deleteChats } from "../../api/chatApi";
 
 export default function Sidebar() {
-  const { showChat, selectionChatMode, clearChatSelection, selectedChats, setConversations, setActiveChat } = useChat();
+  const { showChat, selectionChatMode, clearChatSelection, selectedChats, setActiveChat, setChats } = useChat();
   const [open, setOpen] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [openNewChat, setOpenNewChat] = useState(false);
@@ -42,8 +44,9 @@ export default function Sidebar() {
 
 
   const handleDelete = () => {
-    // deleteConversations(selectedChats)
-    setConversations((prev) => prev.filter((conv) => !selectedChats.includes(conv.id)))
+    console.log(selectedChats)
+    deleteChats(selectedChats)
+    setChats((prev) => prev.filter((conv) => !selectedChats.includes(conv.id)))
     setActiveChat(null)
     clearChatSelection()
   }

@@ -5,12 +5,12 @@ import Avatar from "../common/Avatar";
 import { useEffect, useRef, useState } from "react";
 
 export default function ChatItem({ chat }) {
-  const { openChat, activeChat, selectionChatMode, setActiveChat, setSelectionChatMode, selectedChats, setSelectedChats, handleMarkAsRead, loadMessages, user, setChats, typingUser } = useChat();
+  const { activeChat, selectionChatMode, setActiveChat, setSelectionChatMode, selectedChats, setSelectedChats, loadMessages, user, setChats, typingUser } = useChat();
   const [chatOption, setChatOption] = useState(false);
   const [showArrow, setshowArrow] = useState(false);
   const menuRef = useRef(null);
 
-  const otherUser = chat.users.find(u => u.id !== user.id);
+  const otherUser = chat?.users?.find(u => u.id !== user.id);
   // const otherUser = chat.users[0];
   const isSelected = selectedChats.includes(chat.id);
 
@@ -34,7 +34,6 @@ export default function ChatItem({ chat }) {
   const open = (chat) => {
     setActiveChat(chat);
     loadMessages(chat.id);
-    handleMarkAsRead(chat.id);
     setChats((prev) => prev.map((c) => c.id === chat.id ? { ...c, unread_count: 0 } : c));
   };
 

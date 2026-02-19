@@ -8,6 +8,7 @@ import { deleteMessages } from "../../api/chatApi";
 import EmojiPicker from "emoji-picker-react";
 import { Smile } from "lucide-react";
 import ReplyMessage from "./ReplyMessage";
+import ForwardMessages from "./ForwardMessages";
 
 export default function MessageInput({ chatId, selectedReplyMessage, setSelectedReplyMessage }) {
   const [text, setText] = useState("");
@@ -19,25 +20,33 @@ export default function MessageInput({ chatId, selectedReplyMessage, setSelected
   const [showDeletePopup, setShowDeletePopup] = useState(false);
   let actionComponent;
 
+
+  const handleDelete = () => {
+    deleteMessages(chatId, selectedMessages);
+    setMessages((prev) => prev.map((message) => !selectedMessages.includes(message.id) ? message : { ...message, is_deleted: true }));
+    clearSelection();
+  };
+
+
   {
     switch (selectionMode) {
       case 'reply':
         actionComponent = <ReplyMessage selectedReplyMessage={selectedReplyMessage} setSelectedReplyMessage={setSelectedReplyMessage} />;
         break;
       case 'delete':
-        actionComponent = <SelectionBar />;
+        actionComponent = <SelectionBar handleClick={handleDelete} />;
         break;
       case 'copy':
-        actionComponent = <SelectionBar />;
+        actionComponent = <SelectionBar handleClick={() => window.navigator.clipboard.writeText(selectedMessages.map((message) => message.body).join("\n"))} />;
         break;
       case 'forward':
-        actionComponent = <SelectionBar />;
+        actionComponent = <ForwardMessages />;
         break;
       case 'star':
-        actionComponent = <SelectionBar />;
+        actionComponent = <SelectionBar handleClick={() => { }} />;
         break;
       case 'report':
-        actionComponent = <SelectionBar />;
+        actionComponent = <SelectionBar handleClick={() => { }} />;
         break;
       default:
         actionComponent = null;
@@ -104,11 +113,6 @@ export default function MessageInput({ chatId, selectedReplyMessage, setSelected
 
 
 
-  const handleDelete = () => {
-    deleteMessages(selectedMessages);
-    setMessages((prev) => prev.filter((message) => !selectedMessages.includes(message.id)));
-    clearSelection();
-  };
 
   return (
     <div
