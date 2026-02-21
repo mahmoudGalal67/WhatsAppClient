@@ -82,19 +82,29 @@ export function ChatProvider({ children }) {
     });
     channel.joining(async (user) => {
       setOnlineUsers((prev) => [...prev, user])
-      await markAsDeliveredApi();
-      if (activeChat) {
-        loadMessages(activeChat.id);
-      }
+
     });
     channel.leaving((user) => {
       setOnlineUsers((prev) => prev.filter((u) => u.id !== user.id))
     });
 
     return () => echo.leave("online");
-  }, [usersInChat]);
+  }, []);
+  // }, [usersInChat]);
 
   const isUserOnline = (id) => onlineUsers.some((u) => u.id === id);
+
+
+  useEffect(() => async () => {
+    if (onlineUsers.length > 0) {
+      await markAsDeliveredApi();
+      if (activeChat) {
+        loadMessages(activeChat.id);
+      }
+    }
+
+  }, [onlineUsers]);
+
 
   /* ---------------- CHAT REALTIME ---------------- */
 
@@ -176,11 +186,14 @@ export function ChatProvider({ children }) {
       }
       setChats((prevChats) =>
         prevChats.map((chat) => {
-          return {
-            ...chat,
-            unread_count: chat.unread_count + 1,
-            last_message: e,
-          };
+          if (chat.id === e.chat_id) {
+            return {
+              ...chat,
+              unread_count: chat.unread_count + 1,
+              last_message: e,
+            };
+          }
+          return chat;
         })
       );
     });

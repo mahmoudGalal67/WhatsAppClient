@@ -5,7 +5,7 @@ import { useChat } from "../../context/ChatContext";
 import { forwardMessage } from "../../api/chatApi";
 
 export default function ChatsModal({ onClose }) {
-    const { chats, currentUser, selectedMessages, setSelectionMode } = useChat()
+    const { chats, currentUser, selectedMessages, setSelectionMode, setMessages, userIsOnline, UserExistInChat } = useChat()
     const [selectedChats, setSelectedChats] = useState([]);
     const [search, setSearch] = useState("");
     const [show, setShow] = useState(false); // controls animation
@@ -15,7 +15,13 @@ export default function ChatsModal({ onClose }) {
 
     const handleSend = async () => {
         setLoading(true)
-        await forwardMessage({ target_chat_ids: selectedChats, message_ids: selectedMessages })
+        const response = await forwardMessage({
+            target_chat_ids: selectedChats, message_ids: selectedMessages,
+            is_delivered: userIsOnline ? 1 : 0,
+            is_seen: UserExistInChat?.id ? 1 : 0,
+        })
+
+        setMessages((prev) => [...prev, ...response.messages])
         setLoading(false)
         handleClose();
         setSelectionMode(false)

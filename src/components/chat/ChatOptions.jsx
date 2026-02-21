@@ -1,8 +1,10 @@
 import { useEffect, useRef, useState } from "react";
 import { X } from "lucide-react";
-import { deleteChats } from "../../api/chatApi";
+import { deleteChats, shareMessage } from "../../api/chatApi";
+import { useChat } from "../../context/ChatContext";
 
 export default function ChatOptions({ onClose, option }) {
+    const { selectedChats } = useChat();
     const [message, setMessage] = useState("");
     const [loading, setLoading] = useState(false);
     const menuRef = useRef(null);
@@ -18,19 +20,14 @@ export default function ChatOptions({ onClose, option }) {
         return () => document.removeEventListener("mousedown", handler);
     }, [onClose]);
 
-    const handleImageChange = (e) => {
-        const file = e.target.files[0];
-        if (file) {
-            setImage(file);
-            setPreview(URL.createObjectURL(file));
-        }
-    };
 
     const handleSubmit = async (e) => {
         e.preventDefault();
+        const response = await shareMessage({ body: message, chat_ids: selectedChats, type: 'text' });
         setLoading(true);
 
         try {
+            console.log(response)
 
             // const response = await addConversations({ message })
             onClose();

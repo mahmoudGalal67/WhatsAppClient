@@ -5,8 +5,10 @@ import {
   ChevronDown,
   CopyIcon,
   FlagIcon,
+  Forward,
   ForwardIcon,
   MessageSquareTextIcon,
+  PhoneForwarded,
   StarIcon,
   TrashIcon,
 } from "lucide-react";
@@ -144,6 +146,9 @@ export default function Message({ message, selectedReplyMessage, setSelectedRepl
               </div>
             </div>
           )}
+          {message.forwarded_from && (
+            <h3 className="text-xs text-gray-400 mb-1 flex items-center gap-1"> <Forward size={16} />  Forwarded</h3>
+          )}
           <div className="flex items-center gap-2">
             {message.is_deleted ? <p className="text-gray-400 italic ">This message was deleted</p> : message.type === "text" && <p>{message.body}</p>}
             {!message.is_deleted && message.type === "image" && (
@@ -179,33 +184,35 @@ export default function Message({ message, selectedReplyMessage, setSelectedRepl
           </button>
         )}
       </div>
-      {selectionMode && selectionMode !== 'reply' && (
-        <label className="relative flex items-center cursor-pointer my-auto">
-          <input
-            type="checkbox"
-            checked={isSelected}
-            onChange={() => toggleMessageSelection(message.id)}
-            className="peer sr-only"
-          />
-          <div
-            className="w-5 h-5 rounded-md border-2 border-lightgray flex items-center justify-center
+      {
+        selectionMode && selectionMode !== 'reply' && (
+          <label className="relative flex items-center cursor-pointer my-auto">
+            <input
+              type="checkbox"
+              checked={isSelected}
+              onChange={() => toggleMessageSelection(message.id)}
+              className="peer sr-only"
+            />
+            <div
+              className="w-5 h-5 rounded-md border-2 border-lightgray flex items-center justify-center
                   peer-checked:bg-[#00a884] peer-checked:border-[#00a884] transition-all"
-          >
-            <svg
-              className={`w-3 h-3 text-black ${isSelected ? "opacity-100" : "opacity-0"} peer-checked:opacity-100`}
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="4"
-              strokeLinecap="round"
-              strokeLinejoin="round"
             >
-              <polyline points="20 6 9 17 4 12" />
-            </svg>
-          </div>
-        </label>
-      )}
-    </div>
+              <svg
+                className={`w-3 h-3 text-black ${isSelected ? "opacity-100" : "opacity-0"} peer-checked:opacity-100`}
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="4"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              >
+                <polyline points="20 6 9 17 4 12" />
+              </svg>
+            </div>
+          </label>
+        )
+      }
+    </div >
   );
 }
 

@@ -9,15 +9,21 @@ import ChatOptions from "../chat/ChatOptions";
 import DeletePopup from "../chat/DeletePopup";
 import NewContactModal from "../chat/NewContactModal";
 import { deleteChats } from "../../api/chatApi";
+import MyProfile from "../MyProfile";
 
-export default function Sidebar() {
-  const { showChat, selectionChatMode, clearChatSelection, selectedChats, setActiveChat, setChats } = useChat();
+export default function Sidebar({ setIsMyProfile, isMyProfile }) {
+  const { showChat, selectionChatMode, clearChatSelection, selectedChats, setActiveChat, setChats, user } = useChat();
   const [open, setOpen] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [openNewChat, setOpenNewChat] = useState(false);
   const [chatOption, setchatOption] = useState('');
   const menuRef = useRef(null);
 
+  const [myProfile, setMyProfile] = useState(user);
+
+  useEffect(() => {
+    setMyProfile(user);
+  }, [user]);
 
   // Close menu when clicking outside
   useEffect(() => {
@@ -77,6 +83,10 @@ export default function Sidebar() {
     }
   }
 
+  if (isMyProfile) {
+    return <MyProfile myProfile={myProfile} setMyProfile={setMyProfile} setIsMyProfile={setIsMyProfile} />
+  }
+
   return (
     <aside
       className={`
@@ -95,8 +105,8 @@ export default function Sidebar() {
       {openNewChat && <NewChatModal onClose={() => setOpenNewChat(false)} />}
       {/* Header */}
       <div className="h-14 px-4 flex items-center justify-between">
-        <div className="flex items-center gap-8">
-          <Avatar />
+        <div className="flex items-center gap-8" onClick={() => { setIsMyProfile(true) }}>
+          <Avatar src={myProfile?.avatar} />
           <h1 className="text-2xl font-bold">WhatsApp</h1>
         </div>
         <div className="flex gap-4 text-gray-400 relative" ref={menuRef}>
@@ -147,7 +157,7 @@ export default function Sidebar() {
           </div>
         )
       }
-      {chatOption && <ChatOptions onClose={() => setchatOption('')} option={chatOption} />}
+      {chatOption && <ChatOptions onClose={() => setchatOption('')} option={chatOption} selectedChats={selectedChats} />}
       {confirmDelete && <DeletePopup onClose={() => setConfirmDelete(false)} handleDelete={handleDelete} />}
     </aside>
   );

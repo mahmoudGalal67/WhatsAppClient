@@ -3,7 +3,7 @@ export default function Avatar({ src, onClick }) {
     (
       src ?
         <img
-          src={src}
+          src={`http://127.0.0.1:8000/storage/${src}`}
           className="w-10 h-10 rounded-full object-cover cursor-pointer"
           alt="avatar"
           onClick={onClick}

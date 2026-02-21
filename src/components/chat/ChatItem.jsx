@@ -118,7 +118,7 @@ export default function ChatItem({ chat }) {
         </div>
       )}
 
-      <Avatar src={chat.avatar} />
+      <Avatar src={otherUser?.avatar} />
       {/* Hover Arrow */}
       {showArrow && !selectionChatMode && (
         <button

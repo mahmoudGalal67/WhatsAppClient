@@ -14,8 +14,17 @@ import ProfilePanel from "../ProfilePanel";
 import EditProfilePanel from "../EditProfilePanel";
 import { ChatHeaderSkeleton, MessagesSkeleton } from "../chat/Loading";
 
-export default function ChatArea() {
-  const { activeChat, closeChat, showChat, setConversations, setActiveChat, profileOpen, openProfile, loadingMessages } = useChat();
+export default function ChatArea({ isMyProfile, setIsMyProfile }) {
+  const { activeChat, closeChat, showChat, setConversations, setActiveChat, profileOpen, openProfile, loadingMessages, user, onlineUsers } = useChat();
+
+  const otherUser = activeChat?.users.find((u) => u.id !== user.id)
+
+
+  const onlineIds = new Set(onlineUsers.map(u => u.id));
+
+  const userIsOnline = activeChat ?
+    onlineIds.has(otherUser.id)
+    : false;
 
   const [selectedReplyMessage, setSelectedReplyMessage] = useState(null);
 
@@ -23,6 +32,11 @@ export default function ChatArea() {
   const menuRef = useRef(null);
 
 
+  // useEffect(() => {
+  //   if (activeChat) {
+  //     setUserInfo(activeChat?.users.find((u) => u.id !== user.id));
+  //   }
+  // }, [activeChat])
 
   // Close menu when clicking outside
   useEffect(() => {
@@ -84,10 +98,14 @@ export default function ChatArea() {
               className="text-gray-400 cursor-pointer hover:text-white hover:bg-[#2a3942] p-2 rounded-full"
             />
           </button>
-          <Avatar src={activeChat.avatar} onClick={openProfile} />
+          <Avatar src={activeChat?.users.find((u) => u.id !== user.id).avatar} onClick={
+            () => {
+              openProfile();
+            }
+          } />
           <div>
-            <h3 className="text-sm font-medium">{activeChat.contactName}</h3>
-            <p className="text-xs text-gray-400">Online</p>
+            <h3 className="text-sm font-medium">{activeChat?.users.find((u) => u.id !== user.id).name}</h3>
+            <p className="text-xs text-gray-400">{userIsOnline ? <div className="flex items-center items-center flex-row-reverse gap-2"><div className="w-2 h-2 rounded-full bg-green-500"></div>Online</div> : "Offline"}</p>
           </div>
         </div>
 
@@ -130,11 +148,11 @@ export default function ChatArea() {
           )}
         </div>
       </div>
-      <ProfilePanel />
       <MessageList selectedReplyMessage={selectedReplyMessage} setSelectedReplyMessage={setSelectedReplyMessage} />
       <MessageInput chatId={activeChat?.id} selectedReplyMessage={selectedReplyMessage} setSelectedReplyMessage={setSelectedReplyMessage} />
-      <EditProfilePanel />
-      <ProfilePanel />
+
+      <EditProfilePanel otherUser={otherUser} />
+      <ProfilePanel otherUser={otherUser} />
     </main>
   );
 }
