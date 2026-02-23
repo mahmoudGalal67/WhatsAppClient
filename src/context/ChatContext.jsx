@@ -1,6 +1,7 @@
 import { createContext, useContext, useEffect, useRef, useState } from "react";
 import { getChats, getMessages, markAsDeliveredApi, markAsSeenApi, openChatApi, sendMessage } from "../api/chatApi";
 import echo from "../lib/bootstrap";
+import axios from "axios";
 
 // import { fakeChats } from "../data/mockChats";
 
@@ -9,6 +10,7 @@ const ChatContext = createContext();
 export function ChatProvider({ children }) {
   const userRef = useRef(JSON.parse(localStorage.getItem("user")) || null);
   const user = userRef.current;
+  const token = localStorage.getItem("token");
 
   const [chats, setChats] = useState([]);
   const [activeChat, setActiveChat] = useState(null);
@@ -136,7 +138,7 @@ export function ChatProvider({ children }) {
     channel.listenForWhisper("typing", (e) => {
       if (e.user_id === user.id) return;
 
-      setTypingUser(e.user_id);
+      setTypingUser({ user_id: e.user_id, activeChat_id: e.activeChat_id });
       clearTimeout(typingTimeoutRef.current);
       typingTimeoutRef.current = setTimeout(() => {
         setTypingUser(null);
@@ -184,18 +186,25 @@ export function ChatProvider({ children }) {
       if (activeChat && activeChat.id === e.chat_id) {
         return;
       }
-      setChats((prevChats) =>
-        prevChats.map((chat) => {
-          if (chat.id === e.chat_id) {
-            return {
-              ...chat,
-              unread_count: chat.unread_count + 1,
-              last_message: e,
-            };
-          }
-          return chat;
-        })
-      );
+      setChats((prevChats) => {
+        const chatIndex = prevChats.findIndex(
+          (chat) => chat.id === e.chat_id
+        );
+
+        if (chatIndex === -1) return prevChats;
+
+        const updatedChat = {
+          ...prevChats[chatIndex],
+          unread_count: (prevChats[chatIndex].unread_count || 0) + 1,
+          last_message: e,
+        };
+
+        const remainingChats = prevChats.filter(
+          (chat) => chat.id !== e.chat_id
+        );
+
+        return [updatedChat, ...remainingChats];
+      });
     });
 
     return () => {
@@ -205,12 +214,89 @@ export function ChatProvider({ children }) {
   }, [user?.id, activeChat]);
 
 
-
   /* ---------------- SEND MESSAGE ---------------- */
 
-  const handleSendMessage = async (payload) => {
+  const handleSendMessage = async (payload, type = "text") => {
     if (!activeChat) return;
+    if (type === "file") {
+      const tempId = Date.now();
+      setMessages((prev) => [
+        ...prev,
+        {
+          id: tempId,
+          chat_id: activeChat.id,
+          body: payload.body,
+          type,
+          file_path: payload.file_path,
+          created_at: new Date().toISOString(),
+          user: user,
+          user_id: user.id,
+          is_delivered: userIsOnline ? 1 : 0,
+          is_seen: UserExistInChat?.id ? 1 : 0,
+          reply_to: payload.reply_to,
+          reply_message: payload.reply_message,
+          uploadProgress: 0,
+          pending: true,
+        },
+      ]);
+      try {
+        const { data } = await axios.post("http://localhost:8000/api/messages", payload, {
+          headers: {
+            "Content-Type": "multipart/form-data",
+            "Authorization": `Bearer ${token}`
+          },
 
+          onUploadProgress: (progressEvent) => {
+
+            const percent = Math.round(
+              (progressEvent.loaded * 100) / progressEvent.total
+            );
+            setMessages(prev =>
+              prev.map(m =>
+                m.id === tempId ? { ...m, uploadProgress: percent } : m
+              )
+            );
+          },
+        });
+
+        // 3️⃣ Replace temp message
+        setMessages((prev) =>
+          prev.map((m) =>
+            m.id === tempId ? { ...data, pending: false, is_delivered: userIsOnline ? 1 : 0, is_seen: UserExistInChat?.id ? 1 : 0 } : m
+          )
+        );
+        setChats((prevChats) => {
+          const chatIndex = prevChats.findIndex(
+            (chat) => chat.id === activeChat.id
+          );
+
+          if (chatIndex === -1) return prevChats;
+
+          const updatedChat = {
+            ...prevChats[chatIndex],
+            last_message: {
+              body: data.body,
+              type: data.type,
+              created_at: data.created_at,
+              user_id: user.id,
+            },
+          };
+
+          const remainingChats = prevChats.filter(
+            (chat) => chat.id !== activeChat.id
+          );
+
+          return [updatedChat, ...remainingChats];
+        });
+        return data;
+      } catch (err) {
+        console.error(err);
+        setMessages((prev) =>
+          prev.filter((m) => m.id !== tempId)
+        );
+      }
+      return;
+    }
     const tempId = Date.now();
     setMessages((prev) => [
       ...prev,
@@ -240,6 +326,29 @@ export function ChatProvider({ children }) {
           m.id === tempId ? { ...response, pending: false, is_delivered: userIsOnline ? 1 : 0, is_seen: UserExistInChat?.id ? 1 : 0 } : m
         )
       );
+      setChats((prevChats) => {
+        const chatIndex = prevChats.findIndex(
+          (chat) => chat.id === activeChat.id
+        );
+
+        if (chatIndex === -1) return prevChats;
+
+        const updatedChat = {
+          ...prevChats[chatIndex],
+          last_message: {
+            body: response.body,
+            type: response.type,
+            created_at: response.created_at,
+            user_id: user.id,
+          },
+        };
+
+        const remainingChats = prevChats.filter(
+          (chat) => chat.id !== activeChat.id
+        );
+
+        return [updatedChat, ...remainingChats];
+      });
       return response;
     } catch (err) {
       console.error(err);
@@ -256,6 +365,7 @@ export function ChatProvider({ children }) {
 
     echo.private(`chat.${activeChat.id}`).whisper("typing", {
       user_id: user.id,
+      activeChat_id: activeChat.id,
     });
   };
 
@@ -310,6 +420,7 @@ export function ChatProvider({ children }) {
         selectionMode,
         setSelectionMode,
         selectedMessages,
+        setSelectedMessages,
         toggleMessageSelection,
         clearSelection,
         setMessages,

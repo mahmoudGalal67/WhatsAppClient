@@ -4,7 +4,7 @@ import { deleteChats, shareMessage } from "../../api/chatApi";
 import { useChat } from "../../context/ChatContext";
 
 export default function ChatOptions({ onClose, option }) {
-    const { selectedChats } = useChat();
+    const { selectedChats, setSelectionChatMode, setSelectedChats } = useChat();
     const [message, setMessage] = useState("");
     const [loading, setLoading] = useState(false);
     const menuRef = useRef(null);
@@ -23,13 +23,11 @@ export default function ChatOptions({ onClose, option }) {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-        const response = await shareMessage({ body: message, chat_ids: selectedChats, type: 'text' });
         setLoading(true);
-
         try {
-            console.log(response)
-
-            // const response = await addConversations({ message })
+            const response = await shareMessage({ body: message, chat_ids: selectedChats, type: 'text' });
+            setSelectionChatMode('');
+            setSelectedChats([]);
             onClose();
         } catch (err) {
             console.error(err);

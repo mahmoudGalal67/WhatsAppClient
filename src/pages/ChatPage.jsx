@@ -8,7 +8,7 @@ export default function ChatPage() {
 
   return (
     <ChatProvider>
-      <div className="h-screen w-screen bg-[#0b141a] text-white flex overflow-hidden">
+      <div className="h-[100dvh] w-screen bg-[#0b141a] text-white flex overflow-hidden">
         {/* <InfoPanel /> */}
         <Sidebar isMyProfile={isMyProfile} setIsMyProfile={setIsMyProfile} />
         <ChatArea />

@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from "react";
 import { useChat } from "../../context/ChatContext";
-import { ImageIcon, SendHorizonal } from "lucide-react";
+import { ImageIcon, Paperclip, SendHorizonal } from "lucide-react";
 import SelectionBar from "./SelectionBar";
 import DeletePopup from "./DeletePopup";
 import { deleteMessages } from "../../api/chatApi";
@@ -16,6 +16,7 @@ export default function MessageInput({ chatId, selectedReplyMessage, setSelected
   const emojiRef = useRef(null);
   const [preview, setPreview] = useState(null);
   const fileRef = useRef();
+  const imageRef = useRef();
   const { handlelSendMessage, selectionMode, profileOpen, selectedMessages, clearSelection, setMessages, activeChat, sendTyping, handleSendMessage, UserExistInChat, userIsOnline, user } = useChat();
   const [showDeletePopup, setShowDeletePopup] = useState(false);
   let actionComponent;
@@ -87,11 +88,12 @@ export default function MessageInput({ chatId, selectedReplyMessage, setSelected
   };
 
   const handleImage = async (e) => {
+
     const file = e.target.files[0];
     if (!file) return;
 
-    const tempId = Date.now();
-    const imageUrl = URL.createObjectURL(file);
+    const previewUrl = URL.createObjectURL(file);
+    setPreview(previewUrl);
 
     // 2️⃣ Send to backend
     const formData = new FormData();
@@ -108,8 +110,27 @@ export default function MessageInput({ chatId, selectedReplyMessage, setSelected
       console.log(error);
     }
 
-    fileRef.current.value = "";
+    // imageRef.current.value = "";
   };
+
+  const handleFileUpload = async (file) => {
+    const previewUrl = URL.createObjectURL(file);
+    const formData = new FormData();
+    formData.append("chat_id", activeChat.id);
+    formData.append("type", "file");
+    formData.append("file", file);
+    formData.append("file_path", previewUrl);
+    formData.append("is_delivered", userIsOnline ? "1" : "0");
+    formData.append("is_seen", UserExistInChat?.id ? "1" : "0");
+
+    try {
+      await handleSendMessage(formData, "file");
+    } catch (error) {
+      console.log(error);
+    }
+    fileRef.current.value = "";
+
+  }
 
 
 
@@ -135,16 +156,33 @@ export default function MessageInput({ chatId, selectedReplyMessage, setSelected
         onSubmit={submitText}
         className="flex bg-[#111b21] items-center gap-2 rounded-2xl relative pl-12"
       >
+        {/* File Upload */}
         <button
           type="button"
           onClick={() => fileRef.current.click()}
-          className="text-gray-400 absolute left-4 top-1/2 -translate-y-1/2 cursor-pointer"
+          className="text-gray-400 absolute left-4 top-1/2 -translate-y-1/2 cursor-pointer  hover:rounded-lg hover:bg-[#202C33] hover:p-1"
+        >
+          <Paperclip size={22} />
+        </button>
+
+        <input
+          ref={fileRef}
+          type="file"
+          hidden
+          onChange={(e) => handleFileUpload(e.target.files[0])}
+        />
+        {/* File Upload */}
+
+        <button
+          type="button"
+          onClick={() => imageRef.current.click()}
+          className="text-gray-400 absolute left-12 top-1/2 -translate-y-1/2 cursor-pointer  hover:rounded-lg hover:bg-[#202C33] hover:p-1"
         >
           <ImageIcon size={22} />
         </button>
 
         <input
-          ref={fileRef}
+          ref={imageRef}
           type="file"
           accept="image/*"
           hidden
@@ -154,7 +192,7 @@ export default function MessageInput({ chatId, selectedReplyMessage, setSelected
           <button
             type="button"
             onClick={() => setShowEmoji((prev) => !prev)}
-            className="text-gray-400 absolute left-1 top-1/2 -translate-y-1/2 cursor-pointer"
+            className="text-gray-400 absolute left-8 top-1/2 -translate-y-1/2 cursor-pointer hover:rounded-lg hover:bg-[#202C33] hover:p-1"
           >
             <Smile size={22} />
           </button>
@@ -171,28 +209,27 @@ export default function MessageInput({ chatId, selectedReplyMessage, setSelected
             setText(e.target.value)
             sendTyping();
           }}
-          className="flex-1 px-8 py-2  outline-none text-sm"
+          className="flex-1 px-16 py-2  outline-none text-sm"
           placeholder="Type a message"
         />
+        {/* 
+          // <button
+          //   type="button"
+          //   onClick={sendImage}
+          //   className="text-green-500 absolute right-1 top-1/2 -translate-y-1/2 cursor-pointer"
+          // >
+          //   <SendHorizonal size={22} />
+          // </button> */}
 
-        {preview ? (
-          <button
-            type="button"
-            onClick={sendImage}
-            className="text-green-500 absolute right-4 top-1/2 -translate-y-1/2 cursor-pointer"
-          >
-            <SendHorizonal size={22} />
-          </button>
-        ) : (
-          <button
-            type="submit"
-            className="text-green-500 absolute right-4 top-1/2 -translate-y-1/2 cursor-pointer"
-          >
-            <SendHorizonal size={22} />
-          </button>
-        )}
+        <button
+          type="submit"
+          className="text-green-500 absolute right-4 top-1/2 -translate-y-1/2 cursor-pointer"
+        >
+          <SendHorizonal size={22} />
+        </button>
       </form>
       {actionComponent}
     </div>
   );
 }
+

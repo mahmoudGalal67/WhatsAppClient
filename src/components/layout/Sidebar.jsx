@@ -12,15 +12,25 @@ import { deleteChats } from "../../api/chatApi";
 import MyProfile from "../MyProfile";
 
 export default function Sidebar({ setIsMyProfile, isMyProfile }) {
-  const { showChat, selectionChatMode, clearChatSelection, selectedChats, setActiveChat, setChats, user } = useChat();
+  const { showChat, selectionChatMode, clearChatSelection, selectedChats, setActiveChat, setChats, user, chats } = useChat();
   const [open, setOpen] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
   const [openNewChat, setOpenNewChat] = useState(false);
   const [chatOption, setchatOption] = useState('');
   const menuRef = useRef(null);
 
   const [myProfile, setMyProfile] = useState(user);
 
+  const filteredChats = searchQuery ? chats.filter((chat) =>
+    chat.users.find((u) => u.id != user.id)?.name?.toLowerCase().includes(searchQuery.toLowerCase())
+  ) : chats;
+
+  const handleSearch = (e) => {
+    setSearchQuery(e.target.value);
+  }
+
+  console.log(searchQuery)
   useEffect(() => {
     setMyProfile(user);
   }, [user]);
@@ -132,10 +142,11 @@ export default function Sidebar({ setIsMyProfile, isMyProfile }) {
           placeholder:text-gray-400
            bg-[#111b21] px-4 py-2 rounded-2xl text-sm outline-none"
           placeholder="Search or start a new chat"
+          onChange={handleSearch}
         />
       </div>
 
-      <ChatList />
+      <ChatList filteredChats={filteredChats} />
       {
         selectionChatMode && (
           <div className="h-14 bg-[#202c33] flex items-center justify-between px-4 border-b border-[#2a3942] absolute bottom-0 left-0 right-0 border-t ">

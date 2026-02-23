@@ -5,11 +5,9 @@ import { updateProfile } from "../api/chatApi";
 
 export default function ProfilePanel({ otherUser }) {
   const { openEditProfile, activeChat, goBackPanel, profileOpen, setChats, setActiveChat } = useChat();
-  const [image, setImage] = useState(null);
 
   const handleImageChange = async (e) => {
     const file = e.target.files[0];
-    setImage(URL.createObjectURL(file));
     const formData = new FormData();
     formData.append("avatar", file);
     formData.append("id", otherUser?.id);
@@ -60,7 +58,7 @@ export default function ProfilePanel({ otherUser }) {
       {/* Profile Content */}
       <div className="flex flex-col items-center py-8 border-b border-[#2a3942] relative">
         <img
-          src={image ? image : otherUser?.avatar ? `http://127.0.0.1:8000/storage/${otherUser?.avatar}` : "https://cdn-icons-png.flaticon.com/512/149/149071.png"}
+          src={otherUser?.avatar ? `http://127.0.0.1:8000/storage/${otherUser?.avatar}` : "https://cdn-icons-png.flaticon.com/512/149/149071.png"}
           className="w-36 h-36 rounded-full object-cover mb-4"
         />
         <h3 className="text-xl font-semibold">{otherUser?.name}</h3>

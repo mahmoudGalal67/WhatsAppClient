@@ -3,10 +3,16 @@ import { useChat } from "../../context/ChatContext";
 import { DateText } from "../../utils/utilis";
 import {
   ChevronDown,
+  CloudDownloadIcon,
   CopyIcon,
+  Download,
+  DownloadCloudIcon,
+  DownloadIcon,
+  FileDown,
   FlagIcon,
   Forward,
   ForwardIcon,
+  LucideDownload,
   MessageSquareTextIcon,
   PhoneForwarded,
   StarIcon,
@@ -14,6 +20,7 @@ import {
 } from "lucide-react";
 import Delivered from "../icons/delevired";
 import { formatWhatsAppDate } from "../../utils/formatWhatsAppDate";
+import FilePreview from "../FilePreview";
 
 export default function Message({ message, selectedReplyMessage, setSelectedReplyMessage }) {
   const [messageOption, setmessageOption] = useState(false);
@@ -149,6 +156,9 @@ export default function Message({ message, selectedReplyMessage, setSelectedRepl
           {message.forwarded_from && (
             <h3 className="text-xs text-gray-400 mb-1 flex items-center gap-1"> <Forward size={16} />  Forwarded</h3>
           )}
+          {message.type !== "text" && message.type !== "image" && (
+            <MessageBubble message={message} />
+          )}
           <div className="flex items-center gap-2">
             {message.is_deleted ? <p className="text-gray-400 italic ">This message was deleted</p> : message.type === "text" && <p>{message.body}</p>}
             {!message.is_deleted && message.type === "image" && (
@@ -227,4 +237,51 @@ function MenuItem({ text, danger, icon, onClick }) {
       {text}
     </div>
   );
+}
+
+function MessageBubble({ message }) {
+  const getFileName = (path) => {
+    if (!path) return "file";
+    return decodeURIComponent(path.split("/").pop());
+  };
+  const url = `${import.meta.env.VITE_APP_URL}/storage/${message.file_path}`;
+  return (
+    <div className="relative bg-green-900 rounded-lg p-2">
+      <FilePreview message={message} />
+      <span className="text-white text-xs m-12">{getFileName(message.file_path)}</span>
+
+      <div className="absolute top-4 right-3 flex items-center justify-center">
+        <svg className="absolute w-10 h-10 rotate-[-90deg] flex items-center justify-center">
+          <circle
+            cx="18"
+            cy="18"
+            r="16"
+            stroke="#8696a0"
+            strokeWidth="2"
+            fill="none"
+            opacity="0.3"
+          />
+          {message.pending && (
+            <circle
+              cx="18"
+              cy="18"
+              r="16"
+              stroke="#00a884"
+              strokeWidth="2"
+              fill="none"
+              strokeDasharray={100}
+              strokeDashoffset={100 - message.uploadProgress}
+              strokeLinecap="round"
+            />
+          )}
+        </svg>
+
+        <a href={url} target="_blank">
+          <Download size={18} color="#8696a0" className="block mr-1 relative z-10" />
+        </a>
+      </div>
+    </div>
+  );
+  // }
+
 }

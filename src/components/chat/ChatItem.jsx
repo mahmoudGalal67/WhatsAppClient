@@ -137,7 +137,7 @@ export default function ChatItem({ chat }) {
           <h4 className="text-sm font-medium">{otherUser?.name}</h4>
           <span className="text-xs text-gray-400">{chat.createdAt}</span>
         </div>
-        <p className={`text-xs ${chat.unread_count > 0 ? 'text-green-500' : 'text-gray-400'} truncate mr-auto text-left mt-2`}>{typingUser ? <span className="text-green-400">typing...</span> : chat.last_message?.body || 'last message'}</p>
+        <p className={`text-xs ${chat.unread_count > 0 ? 'text-green-500' : 'text-gray-400'} truncate mr-auto text-left mt-2`}>{typingUser?.activeChat_id === chat.id ? <span className="text-green-400">typing...</span> : chat.last_message?.body || ''}</p>
       </div>
       {chat.unread_count > 0 && (
         <span className={`badge w-5 h-5 flex items-center justify-center ${chat.unread_count > 0 ? 'bg-green-500 rounded-full' : ''}`}>{chat.unread_count}</span>

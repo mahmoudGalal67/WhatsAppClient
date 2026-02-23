@@ -5,7 +5,7 @@ import { useChat } from "../../context/ChatContext";
 import { forwardMessage } from "../../api/chatApi";
 
 export default function ChatsModal({ onClose }) {
-    const { chats, currentUser, selectedMessages, setSelectionMode, setMessages, userIsOnline, UserExistInChat } = useChat()
+    const { chats, currentUser, selectedMessages, setSelectionMode, setMessages, userIsOnline, UserExistInChat, activeChat, setSelectedMessages } = useChat()
     const [selectedChats, setSelectedChats] = useState([]);
     const [search, setSearch] = useState("");
     const [show, setShow] = useState(false); // controls animation
@@ -20,11 +20,13 @@ export default function ChatsModal({ onClose }) {
             is_delivered: userIsOnline ? 1 : 0,
             is_seen: UserExistInChat?.id ? 1 : 0,
         })
-
-        setMessages((prev) => [...prev, ...response.messages])
+        if (selectedChats.includes(activeChat.id))
+            setMessages((prev) => [...prev, { ...response.messages[0], chat_id: activeChat.id }])
         setLoading(false)
         handleClose();
         setSelectionMode(false)
+        setSelectedMessages([])
+        setSelectedChats([])
     };
     const handleClose = () => {
         setShow(false);

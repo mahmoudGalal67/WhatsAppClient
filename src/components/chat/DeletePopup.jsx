@@ -2,7 +2,7 @@ import { useEffect, useRef } from "react";
 import { useChat } from "../../context/ChatContext";
 
 export default function DeletePopup({ onClose, onDelete }) {
-  const { clearSelection } = useChat();
+  const { clearSelection, setSelectedMessages } = useChat();
   const menuRef = useRef(null);
 
   // Close menu when clicking outside
@@ -19,6 +19,7 @@ export default function DeletePopup({ onClose, onDelete }) {
   const DeleteFunction = () => {
     onDelete();
     clearSelection();
+    setSelectedMessages([])
     onClose();
   };
 
