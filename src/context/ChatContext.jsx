@@ -1,4 +1,4 @@
-import { createContext, useContext, useEffect, useRef, useState } from "react";
+import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
 import { getChats, getMessages, markAsDeliveredApi, markAsSeenApi, openChatApi, sendMessage } from "../api/chatApi";
 import echo from "../lib/bootstrap";
 import axios from "axios";
@@ -8,69 +8,103 @@ import axios from "axios";
 const ChatContext = createContext();
 
 export function ChatProvider({ children }) {
-  const userRef = useRef(JSON.parse(localStorage.getItem("user")) || null);
+  /* ================= USER ================= */
+
+  const userRef = useRef(
+    JSON.parse(localStorage.getItem("user")) || null
+  );
   const user = userRef.current;
   const token = localStorage.getItem("token");
+
+  /* ================= STATE ================= */
 
   const [chats, setChats] = useState([]);
   const [activeChat, setActiveChat] = useState(null);
   const [messages, setMessages] = useState([]);
   const [onlineUsers, setOnlineUsers] = useState([]);
-  const [typingUser, setTypingUser] = useState(null);
   const [usersInChat, setUsersInChat] = useState([]);
+  const [typingUser, setTypingUser] = useState(null);
 
   const [showChat, setShowChat] = useState(false);
-  const [panelStack, setPanelStack] = useState([]);
+  const [loadingMessages, setLoadingMessages] = useState(false);
+  const [loadingChats, setLoadingChats] = useState(false);
+
+  /* ================= REFS ================= */
 
   const activeChannelRef = useRef(null);
   const typingTimeoutRef = useRef(null);
-  const [loadingMessages, setLoadingMessages] = useState(false);
-  const [loadingChats, setLoadingChats] = useState(false);
+
+  /* ================= SELECTION ================= */
+
+  const [panelStack, setPanelStack] = useState([]);
   const [selectionMode, setSelectionMode] = useState('');
   const [selectedMessages, setSelectedMessages] = useState([]);
   const [selectionChatMode, setSelectionChatMode] = useState('');
   const [selectedChats, setSelectedChats] = useState([]);
 
-  const otherUser = activeChat?.users.find((u) => u.id !== user.id)
-  const UserExistInChat = usersInChat.find((u) => u.id === otherUser?.id)
-  const onlineIds = new Set(onlineUsers.map(u => u.id));
 
-  const userIsOnline = activeChat?.users.some(user =>
-    onlineIds.has(otherUser.id)
+  /* ================= MEMOS ================= */
+
+  const otherUser = useMemo(() => {
+    if (!activeChat) return null;
+    return activeChat.users.find((u) => u.id !== user?.id);
+  }, [activeChat, user?.id]);
+
+  const onlineIds = useMemo(
+    () => new Set(onlineUsers.map((u) => u.id)),
+    [onlineUsers]
   );
 
+  const userIsOnline = useMemo(() => {
+    if (!otherUser) return false;
+    return onlineIds.has(otherUser.id);
+  }, [onlineIds, otherUser]);
 
-  /* ---------------- LOADERS ---------------- */
+  const UserExistInChat = useMemo(() => {
+    if (!otherUser) return false;
+    return usersInChat.some((u) => u.id === otherUser.id);
+  }, [usersInChat, otherUser]);
 
-  const loadChats = async () => {
-    const data = await getChats();
-    // setChats(fakeChats);
-    setChats(data);
-  };
+  const isUserOnline = useCallback(
+    (id) => onlineIds.has(id),
+    [onlineIds]
+  );
 
-  const loadMessages = async (chatId) => {
-    const { data } = await getMessages(chatId);
-    setMessages(data.reverse());
-    // setMessages(fakeChats[0].messages.reverse());
-  };
+  /* ================= LOADERS ================= */
 
-  const openChat = async (userId) => {
+  const loadChats = useCallback(async () => {
+    setLoadingChats(true);
+    try {
+      const data = await getChats();
+      setChats(data);
+    } finally {
+      setLoadingChats(false);
+    }
+  }, []);
+
+  const loadMessages = useCallback(async (chatId) => {
+    setLoadingMessages(true);
+    try {
+      const { data } = await getMessages(chatId);
+      setMessages(data.reverse());
+    } finally {
+      setLoadingMessages(false);
+    }
+  }, []);
+
+  const openChat = useCallback(async (userId) => {
     const { data } = await openChatApi(userId);
     setShowChat(true);
     setActiveChat(data);
     loadMessages(data.id);
-    // setActiveChat(fakeChats[0]);
-    // loadMessages(fakeChats[0].id);
-  };
+  }, [loadMessages]);
 
-
-  const handleSeen = async (users) => {
+  const handleSeen = useCallback(async () => {
     if (!activeChat) return;
     await markAsSeenApi(activeChat.id);
-    loadMessages(activeChat.id);
-  }
+  }, [activeChat]);
 
-  /* ---------------- GLOBAL ONLINE PRESENCE ---------------- */
+  /* ================= ONLINE PRESENCE ================= */
 
   useEffect(() => {
     const channel = echo.join("online");
@@ -78,42 +112,26 @@ export function ChatProvider({ children }) {
     channel.here(async (users) => {
       setOnlineUsers(users);
       await markAsDeliveredApi();
-      if (activeChat) {
-        loadMessages(activeChat.id);
-      }
     });
-    channel.joining(async (user) => {
-      setOnlineUsers((prev) => [...prev, user])
 
+    channel.joining((user) => {
+      setOnlineUsers((prev) => [...prev, user]);
     });
+
     channel.leaving((user) => {
-      setOnlineUsers((prev) => prev.filter((u) => u.id !== user.id))
+      setOnlineUsers((prev) => prev.filter((u) => u.id !== user.id));
     });
 
-    return () => echo.leave("online");
+    return () => {
+      echo.leave("online");
+    };
   }, []);
-  // }, [usersInChat]);
 
-  const isUserOnline = (id) => onlineUsers.some((u) => u.id === id);
-
-
-  useEffect(() => async () => {
-    if (onlineUsers.length > 0) {
-      await markAsDeliveredApi();
-      if (activeChat) {
-        loadMessages(activeChat.id);
-      }
-    }
-
-  }, [onlineUsers]);
-
-
-  /* ---------------- CHAT REALTIME ---------------- */
+  /* ================= CHAT REALTIME ================= */
 
   useEffect(() => {
     if (!activeChat) return;
 
-    // Leave old channel
     if (activeChannelRef.current) {
       echo.leave(activeChannelRef.current);
     }
@@ -123,251 +141,173 @@ export function ChatProvider({ children }) {
 
     const channel = echo.private(`chat.${activeChat.id}`);
 
-    // 📩 New message
+    // 📩 message
     channel.listen("MessageSent", (e) => {
-      // Ignore own messages (already added optimistically)
-      if (e.user.id == user.id) return;
+      if (e.user.id === user.id) return;
 
       setMessages((prev) => {
-        const exists = prev.some((m) => m.id === e.id);
-        if (exists) return prev;
+        if (prev.some((m) => m.id === e.id)) return prev;
         return [...prev, e];
       });
     });
-    // ✍️ Typing indicator
+
+    // ✍️ typing
     channel.listenForWhisper("typing", (e) => {
       if (e.user_id === user.id) return;
 
-      setTypingUser({ user_id: e.user_id, activeChat_id: e.activeChat_id });
+      setTypingUser(e);
       clearTimeout(typingTimeoutRef.current);
-      typingTimeoutRef.current = setTimeout(() => {
-        setTypingUser(null);
-      }, 2000);
+      typingTimeoutRef.current = setTimeout(
+        () => setTypingUser(null),
+        2000
+      );
     });
 
     return () => {
-      echo.leave(channelName);
+      echo.leave(`private-chat.${activeChat.id}`);
     };
-  }, [activeChat]);
+  }, [activeChat, user.id]);
 
-  /* ---------------- CHAT PRESENCE (VIEWING CHAT) ---------------- */
+  /* ================= CHAT PRESENCE ================= */
 
   useEffect(() => {
     if (!activeChat) return;
 
-    const presenceChannel = echo.join(`presence.chat.${activeChat.id}`);
+    const presence = echo.join(`presence.chat.${activeChat.id}`);
 
-    presenceChannel.here((users) => {
+    presence.here((users) => {
       setUsersInChat(users);
-      handleSeen(users);
+      handleSeen();
     });
-    presenceChannel.joining((user) => {
-      setUsersInChat((prev) => {
-        const updated = [...prev, user];
-        handleSeen(updated); // ✅ pass updated state
-        return updated;
-      });
+
+    presence.joining((user) => {
+      setUsersInChat((prev) => [...prev, user]);
+      handleSeen();
     });
-    presenceChannel.leaving((user) =>
-      setUsersInChat((prev) => prev.filter((u) => u.id !== user.id))
-    );
 
-    return () => echo.leave(`presence.chat.${activeChat.id}`);
-  }, [activeChat]);
-
-
-  useEffect(() => {
-    if (!user?.id) return;
-
-    const channel = echo.private(`user.${user.id}`);
-
-    channel.listen("MessageSent", (e) => {
-      console.log("User channel event:", e);
-      if (activeChat && activeChat.id === e.chat_id) {
-        return;
-      }
-      setChats((prevChats) => {
-        const chatIndex = prevChats.findIndex(
-          (chat) => chat.id === e.chat_id
-        );
-
-        if (chatIndex === -1) return prevChats;
-
-        const updatedChat = {
-          ...prevChats[chatIndex],
-          unread_count: (prevChats[chatIndex].unread_count || 0) + 1,
-          last_message: e,
-        };
-
-        const remainingChats = prevChats.filter(
-          (chat) => chat.id !== e.chat_id
-        );
-
-        return [updatedChat, ...remainingChats];
-      });
+    presence.leaving((user) => {
+      setUsersInChat((prev) => prev.filter((u) => u.id !== user.id));
     });
 
     return () => {
-      echo.leave(`private-user.${user.id}`);
+      echo.leave(`presence.chat.${activeChat.id}`);
     };
+  }, [activeChat, handleSeen]);
 
-  }, [user?.id, activeChat]);
 
 
-  /* ---------------- SEND MESSAGE ---------------- */
 
-  const handleSendMessage = async (payload, type = "text") => {
-    if (!activeChat) return;
-    if (type === "file") {
+  /* ================= SEND MESSAGE ================= */
+
+  const handleSendMessage = useCallback(
+    async (payload, type = "text") => {
+      if (!activeChat) return;
+
       const tempId = Date.now();
-      setMessages((prev) => [
-        ...prev,
-        {
-          id: tempId,
-          chat_id: activeChat.id,
-          body: payload.body,
-          type,
-          file_path: payload.file_path,
-          created_at: new Date().toISOString(),
-          user: user,
-          user_id: user.id,
-          is_delivered: userIsOnline ? 1 : 0,
-          is_seen: UserExistInChat?.id ? 1 : 0,
-          reply_to: payload.reply_to,
-          reply_message: payload.reply_message,
-          uploadProgress: 0,
-          pending: true,
-        },
-      ]);
-      try {
-        const { data } = await axios.post("http://localhost:8000/api/messages", payload, {
-          headers: {
-            "Content-Type": "multipart/form-data",
-            "Authorization": `Bearer ${token}`
-          },
 
-          onUploadProgress: (progressEvent) => {
-
-            const percent = Math.round(
-              (progressEvent.loaded * 100) / progressEvent.total
-            );
-            setMessages(prev =>
-              prev.map(m =>
-                m.id === tempId ? { ...m, uploadProgress: percent } : m
-              )
-            );
-          },
-        });
-
-        // 3️⃣ Replace temp message
-        setMessages((prev) =>
-          prev.map((m) =>
-            m.id === tempId ? { ...data, pending: false, is_delivered: userIsOnline ? 1 : 0, is_seen: UserExistInChat?.id ? 1 : 0 } : m
-          )
-        );
-        setChats((prevChats) => {
-          const chatIndex = prevChats.findIndex(
-            (chat) => chat.id === activeChat.id
-          );
-
-          if (chatIndex === -1) return prevChats;
-
-          const updatedChat = {
-            ...prevChats[chatIndex],
-            last_message: {
-              body: data.body,
-              type: data.type,
-              created_at: data.created_at,
-              user_id: user.id,
-            },
-          };
-
-          const remainingChats = prevChats.filter(
-            (chat) => chat.id !== activeChat.id
-          );
-
-          return [updatedChat, ...remainingChats];
-        });
-        return data;
-      } catch (err) {
-        console.error(err);
-        setMessages((prev) =>
-          prev.filter((m) => m.id !== tempId)
-        );
-      }
-      return;
-    }
-    const tempId = Date.now();
-    setMessages((prev) => [
-      ...prev,
-      {
+      const optimisticMessage = {
         id: tempId,
         chat_id: activeChat.id,
         body: payload.body,
-        type: payload.type,
+        type,
         file_path: payload.file_path,
         created_at: new Date().toISOString(),
-        user: user,
+        user,
         user_id: user.id,
         is_delivered: userIsOnline ? 1 : 0,
-        is_seen: UserExistInChat?.id ? 1 : 0,
+        is_seen: userExistsInChat ? 1 : 0,
         reply_to: payload.reply_to,
         reply_message: payload.reply_message,
         pending: true,
-      },
-    ]);
+        uploadProgress: 0,
+      };
 
+      setMessages((prev) => [...prev, optimisticMessage]);
 
-    try {
-      const response = await sendMessage(payload);
-      // 3️⃣ Replace temp message
-      setMessages((prev) =>
-        prev.map((m) =>
-          m.id === tempId ? { ...response, pending: false, is_delivered: userIsOnline ? 1 : 0, is_seen: UserExistInChat?.id ? 1 : 0 } : m
-        )
-      );
-      setChats((prevChats) => {
-        const chatIndex = prevChats.findIndex(
-          (chat) => chat.id === activeChat.id
+      try {
+        let response;
+
+        if (type === "file") {
+          const { data } = await axios.post(
+            "http://localhost:8000/api/messages",
+            payload,
+            {
+              headers: {
+                "Content-Type": "multipart/form-data",
+                Authorization: `Bearer ${token}`,
+              },
+              onUploadProgress: (e) => {
+                const percent = Math.round(
+                  (e.loaded * 100) / e.total
+                );
+                setMessages((prev) =>
+                  prev.map((m) =>
+                    m.id === tempId
+                      ? { ...m, uploadProgress: percent }
+                      : m
+                  )
+                );
+              },
+            }
+          );
+          response = data;
+        } else {
+          response = await sendMessage(payload);
+        }
+
+        setMessages((prev) =>
+          prev.map((m) =>
+            m.id === tempId
+              ? {
+                ...response,
+                pending: false,
+                is_delivered: userIsOnline ? 1 : 0,
+                is_seen: UserExistInChat?.id ? 1 : 0,
+              }
+              : m
+          )
         );
 
-        if (chatIndex === -1) return prevChats;
+        // update chat preview
+        setChats((prev) => {
+          const idx = prev.findIndex((c) => c.id === activeChat.id);
+          if (idx === -1) return prev;
 
-        const updatedChat = {
-          ...prevChats[chatIndex],
-          last_message: {
-            body: response.body,
-            type: response.type,
-            created_at: response.created_at,
-            user_id: user.id,
-          },
-        };
+          const updated = {
+            ...prev[idx],
+            last_message: response,
+          };
 
-        const remainingChats = prevChats.filter(
-          (chat) => chat.id !== activeChat.id
+          return [updated, ...prev.filter((c) => c.id !== activeChat.id)];
+        });
+
+        return response;
+      } catch (err) {
+        setMessages((prev) =>
+          prev.filter((m) => m.id !== tempId)
         );
+        console.error(err);
+      }
+    },
+    [activeChat, user, token, userIsOnline, UserExistInChat]
+  );
 
-        return [updatedChat, ...remainingChats];
-      });
-      return response;
-    } catch (err) {
-      console.error(err);
-      setMessages((prev) =>
-        prev.filter((m) => m.id !== tempId)
-      );
-    }
-  };
+  /* ================= TYPING ================= */
 
-  /* ---------------- TYPING SEND ---------------- */
-
-  const sendTyping = () => {
+  const sendTyping = useCallback(() => {
     if (!activeChat) return;
 
     echo.private(`chat.${activeChat.id}`).whisper("typing", {
       user_id: user.id,
       activeChat_id: activeChat.id,
     });
-  };
+  }, [activeChat, user.id]);
+
+  /* ================= INIT ================= */
+
+  useEffect(() => {
+    loadChats();
+  }, [loadChats]);
 
   /* ---------------- UI PANELS ---------------- */
 
@@ -379,12 +319,6 @@ export function ChatProvider({ children }) {
   const closeAllPanels = () => setPanelStack([]);
   const profileOpen = panelStack.includes("profile");
   const editProfileOpen = panelStack.includes("editProfile");
-
-  /* ---------------- INIT ---------------- */
-
-  useEffect(() => {
-    loadChats();
-  }, []);
 
 
   // selectiona //
