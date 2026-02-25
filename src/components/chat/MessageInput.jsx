@@ -1,124 +1,183 @@
-import { useState, useRef, useEffect } from "react";
-import { ImageIcon, Paperclip, SendHorizonal } from "lucide-react";
+import { useState, useRef, useEffect, useCallback } from "react";
+import { ImageIcon, Paperclip, SendHorizonal, Smile } from "lucide-react";
 import SelectionBar from "./SelectionBar";
 import { deleteMessages } from "../../api/chatApi";
-
 import EmojiPicker from "emoji-picker-react";
-import { Smile } from "lucide-react";
 import ReplyMessage from "./ReplyMessage";
 import ForwardMessages from "./ForwardMessages";
 import { useChatUI } from "../../context/ChatUIContext";
 import { useActiveChat } from "../../context/ActiveChatContext";
 import { useMessages } from "../../context/MessageContext";
-import { useChatList } from "../../context/ChatListContext";
 
-export default function MessageInput({ chatId, selectedReplyMessage, setSelectedReplyMessage }) {
+export default function MessageInput({
+  chatId,
+  selectedReplyMessage,
+  setSelectedReplyMessage,
+}) {
   const [text, setText] = useState("");
   const [showEmoji, setShowEmoji] = useState(false);
   const emojiRef = useRef(null);
-  const [preview, setPreview] = useState(null);
-  const fileRef = useRef();
-  const imageRef = useRef();
-  const { selectionMode, profileOpen, selectedMessages, clearSelection } = useChatUI();
+  const typingTimeoutRef = useRef(null);
+  const fileRef = useRef(null);
+  const imageRef = useRef(null);
+
+  const { selectionMode, profileOpen, selectedMessages, clearSelection } =
+    useChatUI();
+
   const { activeChat } = useActiveChat();
-  const { handleSendMessage, sendTyping, setMessages } = useMessages();
+  const { handleSendMessage, sendTyping, setMessages, messages } =
+    useMessages();
 
+  // =============================
+  // ✅ THROTTLED TYPING (CRITICAL)
+  // =============================
+  const handleTyping = useCallback(() => {
+    if (typingTimeoutRef.current) return;
 
+    sendTyping();
 
+    typingTimeoutRef.current = setTimeout(() => {
+      typingTimeoutRef.current = null;
+    }, 1500);
+  }, [sendTyping]);
 
-
-  let actionComponent;
-
-
-  const handleDelete = () => {
+  // =============================
+  // ✅ DELETE
+  // =============================
+  const handleDelete = useCallback(() => {
     deleteMessages(chatId, selectedMessages);
-    setMessages((prev) => prev.map((message) => !selectedMessages.includes(message.id) ? message : { ...message, is_deleted: true }));
+
+    setMessages((prev) =>
+      prev.map((message) =>
+        selectedMessages.includes(message.id)
+          ? { ...message, is_deleted: true }
+          : message
+      )
+    );
+
     clearSelection();
-  };
+  }, [chatId, selectedMessages, setMessages, clearSelection]);
 
+  // =============================
+  // ✅ COPY (FIXED)
+  // =============================
+  const handleCopy = useCallback(() => {
+    const textToCopy = messages
+      .filter((m) => selectedMessages.includes(m.id))
+      .map((m) => m.body)
+      .join("\n");
 
-  {
-    switch (selectionMode) {
-      case 'reply':
-        actionComponent = <ReplyMessage selectedReplyMessage={selectedReplyMessage} setSelectedReplyMessage={setSelectedReplyMessage} />;
-        break;
-      case 'delete':
-        actionComponent = <SelectionBar handleClick={handleDelete} />;
-        break;
-      case 'copy':
-        actionComponent = <SelectionBar handleClick={() => window.navigator.clipboard.writeText(selectedMessages.map((message) => message.body).join("\n"))} />;
-        break;
-      case 'forward':
-        actionComponent = <ForwardMessages />;
-        break;
-      case 'star':
-        actionComponent = <SelectionBar handleClick={() => { }} />;
-        break;
-      case 'report':
-        actionComponent = <SelectionBar handleClick={() => { }} />;
-        break;
-      default:
-        actionComponent = null;
-    }
+    navigator.clipboard.writeText(textToCopy);
+  }, [messages, selectedMessages]);
+
+  // =============================
+  // ✅ ACTION SWITCH
+  // =============================
+  let actionComponent = null;
+
+  switch (selectionMode) {
+    case "reply":
+      actionComponent = (
+        <ReplyMessage
+          selectedReplyMessage={selectedReplyMessage}
+          setSelectedReplyMessage={setSelectedReplyMessage}
+        />
+      );
+      break;
+    case "delete":
+      actionComponent = <SelectionBar handleClick={handleDelete} />;
+      break;
+    case "copy":
+      actionComponent = <SelectionBar handleClick={handleCopy} />;
+      break;
+    case "forward":
+      actionComponent = <ForwardMessages />;
+      break;
+    case "star":
+    case "report":
+      actionComponent = <SelectionBar handleClick={() => {}} />;
+      break;
   }
 
-
-  const onEmojiClick = (emojiData) => {
+  // =============================
+  // ✅ EMOJI
+  // =============================
+  const onEmojiClick = useCallback((emojiData) => {
     setText((prev) => prev + emojiData.emoji);
-  };
+  }, []);
 
+  // close emoji on outside click
   useEffect(() => {
     const handleClickOutside = (e) => {
       if (emojiRef.current && !emojiRef.current.contains(e.target)) {
         setShowEmoji(false);
       }
     };
-    document.addEventListener("click", handleClickOutside);
-    return () => document.removeEventListener("click", handleClickOutside);
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () =>
+      document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
+  // =============================
+  // ✅ SUBMIT TEXT
+  // =============================
+  const submitText = useCallback(
+    (e) => {
+      e.preventDefault();
+      if (!text.trim()) return;
 
-  const submitText = (e) => {
-    e.preventDefault();
-    if (!text.trim()) return;
-    handleSendMessage({
-      chat_id: chatId,
-      type: "text",
-      body: text,
-      reply_to: selectedReplyMessage?.id || null,
-      reply_message: selectedReplyMessage,
-    });
-    setText("");
-    setSelectedReplyMessage(null);
-    clearSelection();
-  };
+      handleSendMessage({
+        chat_id: chatId,
+        type: "text",
+        body: text,
+        reply_to: selectedReplyMessage?.id || null,
+        reply_message: selectedReplyMessage,
+      });
 
+      setText("");
+      setSelectedReplyMessage(null);
+      clearSelection();
+    },
+    [
+      text,
+      chatId,
+      handleSendMessage,
+      selectedReplyMessage,
+      clearSelection,
+      setSelectedReplyMessage,
+    ]
+  );
+
+  // =============================
+  // ✅ IMAGE
+  // =============================
   const handleImage = async (e) => {
-
-    const file = e.target.files[0];
+    const file = e.target.files?.[0];
     if (!file) return;
 
-    const previewUrl = URL.createObjectURL(file);
-    setPreview(previewUrl);
-
-    // 2️⃣ Send to backend
     const formData = new FormData();
     formData.append("chat_id", chatId);
     formData.append("type", "image");
     formData.append("file", file);
 
-
     try {
       await handleSendMessage(formData);
-    } catch (error) {
-      console.log(error);
+    } catch (err) {
+      console.error(err);
     }
 
-    // imageRef.current.value = "";
+    imageRef.current.value = "";
   };
 
+  // =============================
+  // ✅ FILE
+  // =============================
   const handleFileUpload = async (file) => {
+    if (!file || !activeChat) return;
+
     const previewUrl = URL.createObjectURL(file);
+
     const formData = new FormData();
     formData.append("chat_id", activeChat.id);
     formData.append("type", "file");
@@ -127,42 +186,31 @@ export default function MessageInput({ chatId, selectedReplyMessage, setSelected
 
     try {
       await handleSendMessage(formData, "file");
-    } catch (error) {
-      console.log(error);
+    } catch (err) {
+      console.error(err);
     }
+
     fileRef.current.value = "";
+  };
 
-  }
-
-
-
-
+  // =============================
+  // 🚀 RENDER
+  // =============================
   return (
     <div
-      className={`bg-[#202c33] p-3 relative ${profileOpen ? "w-[66.66%]" : "w-full"}`}
+      className={`bg-[#202c33] p-3 relative ${
+        profileOpen ? "w-[66.66%]" : "w-full"
+      }`}
     >
-      {/* Image Preview */}
-      {/* {preview && (
-        <div className="mb-2 relative w-40">
-          <img src={preview} className="rounded-lg" />
-          <button
-            onClick={() => setPreview(null)}
-            className="absolute top-1 right-1 bg-black/60 text-white rounded-full px-2 cursor-pointer"
-          >
-            ✕
-          </button>
-        </div>
-      )} */}
-
       <form
         onSubmit={submitText}
         className="flex bg-[#111b21] items-center gap-2 rounded-2xl relative pl-12"
       >
-        {/* File Upload */}
+        {/* file */}
         <button
           type="button"
-          onClick={() => fileRef.current.click()}
-          className="text-gray-400 absolute left-4 top-1/2 -translate-y-1/2 cursor-pointer  hover:rounded-lg hover:bg-[#202C33] hover:p-1"
+          onClick={() => fileRef.current?.click()}
+          className="text-gray-400 absolute left-4 top-1/2 -translate-y-1/2 hover:bg-[#202C33] hover:p-1 rounded-lg"
         >
           <Paperclip size={22} />
         </button>
@@ -171,14 +219,14 @@ export default function MessageInput({ chatId, selectedReplyMessage, setSelected
           ref={fileRef}
           type="file"
           hidden
-          onChange={(e) => handleFileUpload(e.target.files[0])}
+          onChange={(e) => handleFileUpload(e.target.files?.[0])}
         />
-        {/* File Upload */}
 
+        {/* image */}
         <button
           type="button"
-          onClick={() => imageRef.current.click()}
-          className="text-gray-400 absolute left-12 top-1/2 -translate-y-1/2 cursor-pointer  hover:rounded-lg hover:bg-[#202C33] hover:p-1"
+          onClick={() => imageRef.current?.click()}
+          className="text-gray-400 absolute left-12 top-1/2 -translate-y-1/2 hover:bg-[#202C33] hover:p-1 rounded-lg"
         >
           <ImageIcon size={22} />
         </button>
@@ -190,48 +238,45 @@ export default function MessageInput({ chatId, selectedReplyMessage, setSelected
           hidden
           onChange={handleImage}
         />
-        <div ref={emojiRef} className="relative z-1 top-0 left-0">
+
+        {/* emoji */}
+        <div ref={emojiRef}>
           <button
             type="button"
-            onClick={() => setShowEmoji((prev) => !prev)}
-            className="text-gray-400 absolute left-8 top-1/2 -translate-y-1/2 cursor-pointer hover:rounded-lg hover:bg-[#202C33] hover:p-1"
+            onClick={() => setShowEmoji((p) => !p)}
+            className="text-gray-400 absolute left-8 top-1/2 -translate-y-1/2 hover:bg-[#202C33] hover:p-1 rounded-lg"
           >
             <Smile size={22} />
           </button>
 
           {showEmoji && (
-            <div className="absolute bottom-1/2 left-16 z-50 emoji-container">
+            <div className="absolute bottom-14 left-0 z-[999]">
               <EmojiPicker onEmojiClick={onEmojiClick} theme="dark" />
             </div>
           )}
         </div>
+
+        {/* input */}
         <input
           value={text}
           onChange={(e) => {
-            setText(e.target.value)
-            sendTyping();
+            setText(e.target.value);
+            handleTyping();
           }}
-          className="flex-1 px-16 py-2  outline-none text-sm"
+          className="flex-1 px-16 py-2 outline-none text-sm bg-transparent"
           placeholder="Type a message"
         />
-        {/* 
-          // <button
-          //   type="button"
-          //   onClick={sendImage}
-          //   className="text-green-500 absolute right-1 top-1/2 -translate-y-1/2 cursor-pointer"
-          // >
-          //   <SendHorizonal size={22} />
-          // </button> */}
 
+        {/* send */}
         <button
           type="submit"
-          className="text-green-500 absolute right-4 top-1/2 -translate-y-1/2 cursor-pointer"
+          className="text-green-500 absolute right-4 top-1/2 -translate-y-1/2"
         >
           <SendHorizonal size={22} />
         </button>
       </form>
+
       {actionComponent}
     </div>
   );
 }
-
