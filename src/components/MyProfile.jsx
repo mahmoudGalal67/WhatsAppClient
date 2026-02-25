@@ -3,7 +3,7 @@ import { useState } from "react";
 import { updateProfile } from "../api/chatApi";
 import { set } from "date-fns";
 
-export default function MyProfile({ myProfile, setMyProfile, setIsMyProfile }) {
+export default function MyProfile({ myProfile, setIsMyProfile }) {
     const [profileImage, setProfileImage] = useState(null);
     const [name, setName] = useState(myProfile?.name);
     const [avatar, setAvatar] = useState(myProfile?.avatar);
@@ -16,7 +16,6 @@ export default function MyProfile({ myProfile, setMyProfile, setIsMyProfile }) {
         try {
             setLoading(true);
             const response = await updateProfile({ id: myProfile?.id, name, avatar });
-            setMyProfile(response?.user);
             localStorage.setItem("user", JSON.stringify(response?.user));
             console.log(response);
         }

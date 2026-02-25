@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { X } from "lucide-react";
-import { useChat } from "../../context/ChatContext";
+import { useChatList } from "../../context/ChatListContext";
 
 export default function NewContactModal({ onClose }) {
     const [name, setName] = useState("");
@@ -10,7 +10,7 @@ export default function NewContactModal({ onClose }) {
     const [loading, setLoading] = useState(false);
     const menuRef = useRef(null);
 
-    const { setConversations } = useChat()
+    const { setConversations } = useChatList()
 
     // Close menu when clicking outside
     useEffect(() => {

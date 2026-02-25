@@ -1,10 +1,10 @@
-import { useChat } from "../../context/ChatContext";
 import { Copy, Flag, Forward, Reply, Star, Trash2, X } from "lucide-react";
 import { useState } from "react";
 import DeletePopup from "./DeletePopup";
+import { useChatUI } from "../../context/ChatUIContext";
 
 export default function SelectionBar({ handleClick }) {
-  const { selectionMode, selectedMessages, clearSelection } = useChat();
+  const { selectionMode, selectedMessages, clearSelection } = useChatUI();
 
   const [confirmDelete, setConfirmDelete] = useState(false);
 

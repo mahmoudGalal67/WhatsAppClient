@@ -1,8 +1,9 @@
 import { useEffect, useRef, useState } from "react";
 import { Search, X } from "lucide-react";
-import { useChat } from "../../context/ChatContext";
 import { addChat, getContacts } from "../../api/chatApi";
 import Avatar from "../common/Avatar";
+import { useAuth } from "../../context/AuthContext";
+import { useChatList } from "../../context/ChatListContext";
 
 export default function NewChatModal({ onClose }) {
     const [name, setName] = useState("");
@@ -12,7 +13,8 @@ export default function NewChatModal({ onClose }) {
     const menuRef = useRef(null);
     const [search, setSearch] = useState("");
     const [selected, setSelected] = useState([]);
-    const { user, setChats } = useChat()
+    const { user } = useAuth()
+    const { setChats } = useChatList()
     const [contacts, setContacts] = useState([])
 
 

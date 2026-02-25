@@ -1,14 +1,17 @@
 import { X, Search, Send, SendHorizonal, SendHorizonalIcon, Loader2 } from "lucide-react";
 import Avatar from "../common/Avatar";
 import { useEffect, useRef, useState } from "react";
-import { useChat } from "../../context/ChatContext";
 import { forwardMessage } from "../../api/chatApi";
+import { useChatUI } from "../../context/ChatUIContext";
+import { useActiveChat } from "../../context/ActiveChatContext";
+import { useChatList } from "../../context/ChatListContext";
 
 export default function ChatsModal({ onClose }) {
-    const { chats, currentUser, selectedMessages, setSelectionMode, setMessages, userIsOnline, UserExistInChat, activeChat, setSelectedMessages } = useChat()
-    const [selectedChats, setSelectedChats] = useState([]);
+    const { setMessages, selectedChats, setSelectedChats, selectedMessages, setSelectionMode, setSelectedMessages } = useChatUI()
+    const { userIsOnline, UserExistInChat, activeChat } = useActiveChat()
+    const { chats } = useChatList()
     const [search, setSearch] = useState("");
-    const [show, setShow] = useState(false); // controls animation
+    const [show, setShow] = useState(false); // controls animation`
     const [loading, setLoading] = useState(false);
     const menuRef = useRef(null);
 
@@ -41,7 +44,7 @@ export default function ChatsModal({ onClose }) {
     };
 
     const filteredChats = chats.filter((chat) =>
-        chat.users.find(user => user.id !== currentUser.id && user.name?.toLowerCase().includes(search.toLowerCase()) || user.phone_number?.toLowerCase().includes(search.toLowerCase()))
+        chat.users.find(user => user.id !== user.id && user.name?.toLowerCase().includes(search.toLowerCase()) || user.phone_number?.toLowerCase().includes(search.toLowerCase()))
     );
     // Close menu when clicking outside
     useEffect(() => {
@@ -127,11 +130,11 @@ export default function ChatsModal({ onClose }) {
 
                                 <div className="flex flex-col gap-1">
                                     <span className="text-sm font-medium text-white">
-                                        {chat.users.find(user => user.id !== currentUser.id).name}
+                                        {chat.users.find(user => user.id !== user.id).name}
                                     </span>
-                                    {chat.users.find(user => user.id !== currentUser.id).phone_number && (
+                                    {chat.users.find(user => user.id !== user.id).phone_number && (
                                         <span className="text-xs text-gray-400 truncate max-w-xs">
-                                            {chat.users.find(user => user.id !== currentUser.id).phone_number}
+                                            {chat.users.find(user => user.id !== user.id).phone_number}
                                         </span>
                                     )}
                                 </div>

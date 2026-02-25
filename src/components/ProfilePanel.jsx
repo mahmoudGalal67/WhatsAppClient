@@ -1,10 +1,14 @@
-import { ArrowLeft, Bell, Edit, Lock, MessageSquareTextIcon, Pencil, Shield, Star, X } from "lucide-react";
-import { useChat } from "../context/ChatContext";
-import { useEffect, useState } from "react";
+import { Bell, Edit, Lock, MessageSquareTextIcon, Pencil, Shield, Star, X } from "lucide-react";
+import { useState } from "react";
 import { updateProfile } from "../api/chatApi";
+import { useChatList } from "../context/ChatListContext";
+import { useActiveChat } from "../context/ActiveChatContext";
+import { useChatUI } from "../context/ChatUIContext";
 
 export default function ProfilePanel({ otherUser }) {
-  const { openEditProfile, activeChat, goBackPanel, profileOpen, setChats, setActiveChat } = useChat();
+  const { activeChat, setActiveChat } = useActiveChat();
+  const { openEditProfile, goBackPanel, profileOpen } = useChatUI();
+  const { setChats } = useChatList();
 
   const handleImageChange = async (e) => {
     const file = e.target.files[0];

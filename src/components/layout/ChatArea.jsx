@@ -1,4 +1,3 @@
-import { useChat } from "../../context/ChatContext";
 import MessageList from "../chat/MessageList";
 import MessageInput from "../chat/MessageInput";
 import Avatar from "../common/Avatar";
@@ -13,9 +12,24 @@ import {
 import ProfilePanel from "../ProfilePanel";
 import EditProfilePanel from "../EditProfilePanel";
 import { ChatHeaderSkeleton, MessagesSkeleton } from "../chat/Loading";
+import { useChatList } from "../../context/ChatListContext";
+import { useActiveChat } from "../../context/ActiveChatContext";
+import { useAuth } from "../../context/AuthContext";
+import { useMessages } from "../../context/MessageContext";
+import { useChatUI } from "../../context/ChatUIContext";
 
-export default function ChatArea({ isMyProfile, setIsMyProfile }) {
-  const { activeChat, closeChat, showChat, setConversations, setActiveChat, profileOpen, openProfile, loadingMessages, user, onlineUsers } = useChat();
+export default function ChatArea() {
+  const { setConversations, onlineUsers } = useChatList();
+  const { activeChat, setActiveChat, showChat, setShowChat } = useActiveChat();
+  const { user } = useAuth();
+  const { profileOpen, openProfile } = useChatUI();
+  const { loadingMessages } = useMessages();
+
+  const closeChat = () => {
+    setShowChat(false);
+    setActiveChat(null);
+  }
+
 
   const otherUser = activeChat?.users.find((u) => u.id !== user.id)
 
@@ -30,13 +44,6 @@ export default function ChatArea({ isMyProfile, setIsMyProfile }) {
 
   const [open, setOpen] = useState(false);
   const menuRef = useRef(null);
-
-
-  // useEffect(() => {
-  //   if (activeChat) {
-  //     setUserInfo(activeChat?.users.find((u) => u.id !== user.id));
-  //   }
-  // }, [activeChat])
 
   // Close menu when clicking outside
   useEffect(() => {

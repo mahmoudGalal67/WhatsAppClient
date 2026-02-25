@@ -1,14 +1,16 @@
 import { useState, useRef, useEffect } from "react";
-import { useChat } from "../../context/ChatContext";
 import { ImageIcon, Paperclip, SendHorizonal } from "lucide-react";
 import SelectionBar from "./SelectionBar";
-import DeletePopup from "./DeletePopup";
 import { deleteMessages } from "../../api/chatApi";
 
 import EmojiPicker from "emoji-picker-react";
 import { Smile } from "lucide-react";
 import ReplyMessage from "./ReplyMessage";
 import ForwardMessages from "./ForwardMessages";
+import { useChatUI } from "../../context/ChatUIContext";
+import { useActiveChat } from "../../context/ActiveChatContext";
+import { useMessages } from "../../context/MessageContext";
+import { useChatList } from "../../context/ChatListContext";
 
 export default function MessageInput({ chatId, selectedReplyMessage, setSelectedReplyMessage }) {
   const [text, setText] = useState("");
@@ -17,8 +19,14 @@ export default function MessageInput({ chatId, selectedReplyMessage, setSelected
   const [preview, setPreview] = useState(null);
   const fileRef = useRef();
   const imageRef = useRef();
-  const { handlelSendMessage, selectionMode, profileOpen, selectedMessages, clearSelection, setMessages, activeChat, sendTyping, handleSendMessage, UserExistInChat, userIsOnline, user } = useChat();
-  const [showDeletePopup, setShowDeletePopup] = useState(false);
+  const { selectionMode, profileOpen, selectedMessages, clearSelection } = useChatUI();
+  const { activeChat } = useActiveChat();
+  const { handleSendMessage, sendTyping, setMessages } = useMessages();
+
+
+
+
+
   let actionComponent;
 
 
@@ -77,8 +85,6 @@ export default function MessageInput({ chatId, selectedReplyMessage, setSelected
       chat_id: chatId,
       type: "text",
       body: text,
-      is_delivered: userIsOnline ? 1 : 0,
-      is_seen: UserExistInChat?.id ? 1 : 0,
       reply_to: selectedReplyMessage?.id || null,
       reply_message: selectedReplyMessage,
     });
@@ -100,8 +106,6 @@ export default function MessageInput({ chatId, selectedReplyMessage, setSelected
     formData.append("chat_id", chatId);
     formData.append("type", "image");
     formData.append("file", file);
-    formData.append("is_delivered", userIsOnline ? 1 : 0);
-    formData.append("is_seen", UserExistInChat?.id ? 1 : 0);
 
 
     try {
@@ -120,8 +124,6 @@ export default function MessageInput({ chatId, selectedReplyMessage, setSelected
     formData.append("type", "file");
     formData.append("file", file);
     formData.append("file_path", previewUrl);
-    formData.append("is_delivered", userIsOnline ? "1" : "0");
-    formData.append("is_seen", UserExistInChat?.id ? "1" : "0");
 
     try {
       await handleSendMessage(formData, "file");

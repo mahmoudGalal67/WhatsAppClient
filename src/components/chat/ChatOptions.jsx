@@ -1,10 +1,10 @@
 import { useEffect, useRef, useState } from "react";
 import { X } from "lucide-react";
 import { deleteChats, shareMessage } from "../../api/chatApi";
-import { useChat } from "../../context/ChatContext";
+import { useChatUI } from "../../context/ChatUIContext";
 
 export default function ChatOptions({ onClose, option }) {
-    const { selectedChats, setSelectionChatMode, setSelectedChats } = useChat();
+    const { selectedChats, setSelectionChatMode, setSelectedChats } = useChatUI();
     const [message, setMessage] = useState("");
     const [loading, setLoading] = useState(false);
     const menuRef = useRef(null);
@@ -49,7 +49,7 @@ export default function ChatOptions({ onClose, option }) {
     };
     return (
         <div ref={menuRef} className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50">
-            {option && (
+            {option === "shareMessage" && (
                 <div className="bg-[#202c33] w-[90%] max-w-md rounded-2xl shadow-xl p-6 relative animate-fadeIn">
 
                     {/* Header */}

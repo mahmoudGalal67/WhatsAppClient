@@ -1,10 +1,14 @@
 import { ArrowLeft, Check, CloudSync, Loader2, Phone, User } from "lucide-react";
 import { useEffect, useState } from "react";
-import { useChat } from "../context/ChatContext";
 import { updateProfile } from "../api/chatApi";
+import { useChatList } from "../context/ChatListContext";
+import { useActiveChat } from "../context/ActiveChatContext";
+import { useChatUI } from "../context/ChatUIContext";
 
 export default function EditProfilePanel({ otherUser }) {
-    const { editProfileOpen, goBackPanel, setChats, activeChat, setActiveChat } = useChat();
+    const { activeChat, setActiveChat } = useActiveChat();
+    const { setChats } = useChatList();
+    const { editProfileOpen, goBackPanel } = useChatUI();
     const [name, setName] = useState(otherUser?.name || "");
     const [phone, setPhone] = useState(otherUser?.phone_number || "");
     const [checked, setChecked] = useState(false);

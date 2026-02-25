@@ -1,9 +1,9 @@
-import { useChat } from "../../context/ChatContext";
 import ChatItem from "./ChatItem";
 import { ChatListSkeleton } from "./Loading";
+import { useChatList } from "../../context/ChatListContext";
 
 export default function ChatList({ filteredChats }) {
-  const { chats, loadingChats } = useChat();
+  const { loadingChats } = useChatList();
 
   if (loadingChats) {
     return <ChatListSkeleton />;

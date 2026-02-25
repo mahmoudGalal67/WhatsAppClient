@@ -1,10 +1,10 @@
-import { useChat } from "../../context/ChatContext";
 import { Forward, X } from "lucide-react";
 import ChatsModal from "./ChatsModal";
 import { useState } from "react";
+import { useChatUI } from "../../context/ChatUIContext";
 
 export default function ForwardMessages() {
-    const { selectedMessages, clearSelection } = useChat();
+    const { selectedMessages, clearSelection } = useChatUI();
     const [showForwaardedContacts, setShowForwaardedContacts] = useState(false);
 
     return (

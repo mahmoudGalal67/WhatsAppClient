@@ -1,9 +1,9 @@
 import { useEffect, useRef } from "react";
-import { useChat } from "../../context/ChatContext";
-import Message from "./Message";
+import Message from "./message/Message";
+import { useMessages } from "../../context/MessageContext";
 
 export default function MessageList({ selectedReplyMessage, setSelectedReplyMessage }) {
-  const { messages } = useChat();
+  const { messages } = useMessages();
   const bottomRef = useRef(null);
   // 🔥 Auto scroll when messages change
   useEffect(() => {

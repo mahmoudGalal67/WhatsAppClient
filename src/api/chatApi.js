@@ -57,8 +57,8 @@ export const openChatApi = async (userId) => {
 
 // Messages
 
-export const getMessages = async (chatId) => {
-    const { data } = await axiosInstance.get(`/chats/${chatId}/messages`);
+export const getMessages = async (chatId, config = {}) => {
+    const { data } = await axiosInstance.get(`/chats/${chatId}/messages`, config);
     return data;
 };
 

@@ -1,8 +1,8 @@
 import { X } from "lucide-react";
-import { useChat } from "../../context/ChatContext";
+import { useChatUI } from "../../context/ChatUIContext";
 
-export default function ReplyMessage({ selectedReplyMessage, setSelectedReplyMessage }) {
-    const { clearSelection } = useChat();
+export default function ReplyMessage({ selectedReplyMessage }) {
+    const { clearSelection } = useChatUI();
     return (
         <div className='absolute bottom-14 left-0  bg-[#202c33] w-full h-20 p-2 rounded-md pb-0 border-l-4 border-l-green-500'>
             <button className="absolute top-4 right-4 text-gray-400 cursor-pointer hover:text-white" onClick={clearSelection}>

@@ -1,8 +1,8 @@
 import { useEffect, useRef } from "react";
-import { useChat } from "../../context/ChatContext";
+import { useChatUI } from "../../context/ChatUIContext";
 
 export default function DeletePopup({ onClose, onDelete }) {
-  const { clearSelection, setSelectedMessages } = useChat();
+  const { clearSelection, setSelectedMessages } = useChatUI();
   const menuRef = useRef(null);
 
   // Close menu when clicking outside
