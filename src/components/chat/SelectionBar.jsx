@@ -8,6 +8,16 @@ export default function SelectionBar({ handleClick }) {
 
   const [confirmDelete, setConfirmDelete] = useState(false);
 
+  const handleCase = () => {
+    switch (selectionMode) {
+      case 'delete':
+        setConfirmDelete(true);
+        break;
+      case 'copy':
+        handleClick();
+        break;
+    }
+  }
   return (
     <div className="h-14 bg-[#202c33] flex items-center justify-between px-4 border-b border-[#2a3942] absolute bottom-0 left-0 right-0 z-10">
       <div className="flex items-center gap-4">
@@ -18,7 +28,7 @@ export default function SelectionBar({ handleClick }) {
       </div>
 
       <button
-        onClick={() => setConfirmDelete(true)}
+        onClick={handleCase}
         className="text-red-400 hover:text-red-600 transition cursor-pointer"
       >
         {selectionMode === 'delete' && <Trash2 size={25} color="red" />}
@@ -32,7 +42,7 @@ export default function SelectionBar({ handleClick }) {
 
       {
         confirmDelete && (
-          <DeletePopup onClose={() => setConfirmDelete(false)} onDelete={handleClick} />
+          <DeletePopup onClose={() => setConfirmDelete(false)} handleDelete={handleClick} />
         )
       }
     </div>

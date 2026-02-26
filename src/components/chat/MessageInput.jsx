@@ -8,6 +8,7 @@ import ForwardMessages from "./ForwardMessages";
 import { useChatUI } from "../../context/ChatUIContext";
 import { useActiveChat } from "../../context/ActiveChatContext";
 import { useMessages } from "../../context/MessageContext";
+import { useChatList } from "../../context/ChatListContext";
 
 export default function MessageInput({
   chatId,
@@ -21,10 +22,11 @@ export default function MessageInput({
   const fileRef = useRef(null);
   const imageRef = useRef(null);
 
-  const { selectionMode, profileOpen, selectedMessages, clearSelection } =
+  const { selectionMode, profileOpen, selectedMessages, clearSelection, setSelectedMessages, setSelectionMode } =
     useChatUI();
+  const { isUserOnline } = useChatList();
 
-  const { activeChat } = useActiveChat();
+  const { activeChat, otherUser, UserExistInChat } = useActiveChat();
   const { handleSendMessage, sendTyping, setMessages, messages } =
     useMessages();
 
@@ -62,6 +64,8 @@ export default function MessageInput({
   // ✅ COPY (FIXED)
   // =============================
   const handleCopy = useCallback(() => {
+    setSelectedMessages([]);
+    setSelectionMode(null);
     const textToCopy = messages
       .filter((m) => selectedMessages.includes(m.id))
       .map((m) => m.body)
@@ -94,8 +98,10 @@ export default function MessageInput({
       actionComponent = <ForwardMessages />;
       break;
     case "star":
+      actionComponent = <SelectionBar handleClick={() => { }} />;
+      break;
     case "report":
-      actionComponent = <SelectionBar handleClick={() => {}} />;
+      actionComponent = <SelectionBar handleClick={() => { }} />;
       break;
   }
 
@@ -126,14 +132,13 @@ export default function MessageInput({
     (e) => {
       e.preventDefault();
       if (!text.trim()) return;
-
-      handleSendMessage({
-        chat_id: chatId,
-        type: "text",
-        body: text,
-        reply_to: selectedReplyMessage?.id || null,
-        reply_message: selectedReplyMessage,
-      });
+      const formData = new FormData();
+      formData.append("chat_id", chatId);
+      formData.append("type", "text");
+      formData.append("body", text);
+      formData.append("reply_to", selectedReplyMessage?.id || null);
+      formData.append("reply_message", selectedReplyMessage);
+      handleSendMessage(formData, 'text');
 
       setText("");
       setSelectedReplyMessage(null);
@@ -160,9 +165,14 @@ export default function MessageInput({
     formData.append("chat_id", chatId);
     formData.append("type", "image");
     formData.append("file", file);
-
+    formData.append("is_delivered", isUserOnline(
+      otherUser?.id
+    )
+      ? 1
+      : 0);
+    formData.append("is_seen", UserExistInChat ? 1 : 0);
     try {
-      await handleSendMessage(formData);
+      await handleSendMessage(formData, 'image');
     } catch (err) {
       console.error(err);
     }
@@ -179,13 +189,19 @@ export default function MessageInput({
     const previewUrl = URL.createObjectURL(file);
 
     const formData = new FormData();
-    formData.append("chat_id", activeChat.id);
+    formData.append("chat_id", chatId);
     formData.append("type", "file");
     formData.append("file", file);
     formData.append("file_path", previewUrl);
+    formData.append("is_delivered", isUserOnline(
+      otherUser?.id
+    )
+      ? 1
+      : 0);
+    formData.append("is_seen", UserExistInChat ? 1 : 0);
 
     try {
-      await handleSendMessage(formData, "file");
+      await handleSendMessage(formData, "excel");
     } catch (err) {
       console.error(err);
     }
@@ -198,9 +214,8 @@ export default function MessageInput({
   // =============================
   return (
     <div
-      className={`bg-[#202c33] p-3 relative ${
-        profileOpen ? "w-[66.66%]" : "w-full"
-      }`}
+      className={`bg-[#202c33] p-3 relative ${profileOpen ? "w-[66.66%]" : "w-full"
+        }`}
     >
       <form
         onSubmit={submitText}
@@ -210,7 +225,7 @@ export default function MessageInput({
         <button
           type="button"
           onClick={() => fileRef.current?.click()}
-          className="text-gray-400 absolute left-4 top-1/2 -translate-y-1/2 hover:bg-[#202C33] hover:p-1 rounded-lg"
+          className="text-gray-400 absolute left-4 top-1/2 -translate-y-1/2 hover:bg-[#202C33] hover:p-1 rounded-lg cursor-pointer"
         >
           <Paperclip size={22} />
         </button>
@@ -226,7 +241,7 @@ export default function MessageInput({
         <button
           type="button"
           onClick={() => imageRef.current?.click()}
-          className="text-gray-400 absolute left-12 top-1/2 -translate-y-1/2 hover:bg-[#202C33] hover:p-1 rounded-lg"
+          className="text-gray-400 absolute left-18 top-1/2 -translate-y-1/2 hover:bg-[#202C33] hover:p-1 rounded-lg cursor-pointer"
         >
           <ImageIcon size={22} />
         </button>
@@ -244,13 +259,13 @@ export default function MessageInput({
           <button
             type="button"
             onClick={() => setShowEmoji((p) => !p)}
-            className="text-gray-400 absolute left-8 top-1/2 -translate-y-1/2 hover:bg-[#202C33] hover:p-1 rounded-lg"
+            className="text-gray-400 absolute left-11 top-1/2 -translate-y-1/2 hover:bg-[#202C33] hover:p-1 rounded-lg cursor-pointer"
           >
             <Smile size={22} />
           </button>
 
           {showEmoji && (
-            <div className="absolute bottom-14 left-0 z-[999]">
+            <div className="absolute bottom-12 left-0 z-[999]">
               <EmojiPicker onEmojiClick={onEmojiClick} theme="dark" />
             </div>
           )}

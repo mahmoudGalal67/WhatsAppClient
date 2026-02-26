@@ -8,6 +8,7 @@ import { useAuth } from "../../../context/AuthContext";
 import DropdownMenu from "./DropdownMenu";
 import MessageMeta from "./MessageMeta";
 import SelectionCheckbox from "./SelectionCheckbox";
+import FilePreview from "../../FilePreview";
 
 /**
  * 🔥 MEMOIZED — prevents massive re-renders in chat lists
@@ -125,7 +126,7 @@ const Message = function Message({ message, setSelectedReplyMessage }) {
         {/* ========= content ========= */}
         <div className="flex flex-col w-full">
           {/* reply preview */}
-          {message.reply_to && (
+          {message.reply_message?.body && (
             <div className="bg-[#103E2C] w-full p-1 rounded-md border-l-3 border-green-400">
               <h3 className="text-sm text-green-400 mb-1">You</h3>
               <div className="text-sm text-gray-400 mb-1">
@@ -144,11 +145,11 @@ const Message = function Message({ message, setSelectedReplyMessage }) {
 
           {/* file bubble */}
           {message.type !== "text" && message.type !== "image" && (
-            <FileBubble message={message} />
+            <FilePreview message={message} />
           )}
 
           {/* text / image */}
-          <div className="flex items-center gap-2">
+          <div className="flex items-center justify-end gap-2">
             {message.is_deleted ? (
               <p className="text-gray-400 italic">
                 This message was deleted
@@ -162,7 +163,7 @@ const Message = function Message({ message, setSelectedReplyMessage }) {
                     ? message.file_path
                     : `${import.meta.env.VITE_APP_URL}/storage/${message.file_path}`
                 }
-                className="rounded-lg max-w-xs"
+                className="rounded-lg max-w-xs w-full"
                 loading="lazy"
               />
             ) : null}
@@ -176,7 +177,7 @@ const Message = function Message({ message, setSelectedReplyMessage }) {
         {showArrow && !selectionMode && (
           <button
             onClick={handleMenuToggle}
-            className="absolute right-1 top-3 -translate-y-1/2 text-gray-400 hover:text-white"
+            className="absolute right-1 top-3 -translate-y-1/2 text-gray-400 hover:text-white cursor-pointer"
           >
             <ChevronDown size={16} />
           </button>

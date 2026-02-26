@@ -79,7 +79,7 @@ const MenuItem = memo(function MenuItem({ text, icon, onClick, danger }) {
     return (
         <button
             onClick={onClick}
-            className={`flex items-center gap-2 w-full py-2 px-3 hover:bg-gray-700 ${danger ? "text-red-500" : ""
+            className={`flex items-center gap-2 w-full py-2 px-3 hover:bg-gray-700 cursor-pointer ${danger ? "text-red-500" : ""
                 }`}
         >
             {icon}

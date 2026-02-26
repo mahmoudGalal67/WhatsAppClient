@@ -68,7 +68,6 @@ export default function NewChatModal({ onClose }) {
 
         try {
             const response = await addChat({ user_one_id: user.id, other_user_ids: selected })
-            console.log(response)
             setChats((prev) => [...prev, ...response])
             onClose();
         } catch (err) {

@@ -1,9 +1,10 @@
 import { memo } from "react";
+import { formatWhatsAppDate } from "../../../utils/formatWhatsAppDate";
 
 const MessageMeta = memo(function MessageMeta({ message, isMine }) {
     return (
         <div
-            className={`flex items-center gap-3 ${message.type === "image" ? "absolute bottom-2 right-4" : ""
+            className={`flex items-center  gap-3 ${message.type === "image" ? "absolute bottom-2 right-4" : ""
                 }`}
         >
             <div className="text-[10px] text-gray-300 mt-2 w-14 text-right">

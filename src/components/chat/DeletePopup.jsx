@@ -1,7 +1,7 @@
 import { useEffect, useRef } from "react";
 import { useChatUI } from "../../context/ChatUIContext";
 
-export default function DeletePopup({ onClose, onDelete }) {
+export default function DeletePopup({ onClose, handleDelete }) {
   const { clearSelection, setSelectedMessages } = useChatUI();
   const menuRef = useRef(null);
 
@@ -17,7 +17,7 @@ export default function DeletePopup({ onClose, onDelete }) {
   }, []);
 
   const DeleteFunction = () => {
-    onDelete();
+    handleDelete();
     clearSelection();
     setSelectedMessages([])
     onClose();

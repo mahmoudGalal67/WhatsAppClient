@@ -40,10 +40,10 @@ export function MessageProvider({ children }) {
     if (loadingChatIdRef.current === chatId) return;
 
     // ✅ serve from cache instantly
-    if (messagesCacheRef.current.has(chatId)) {
-      setMessages(messagesCacheRef.current.get(chatId));
-      return;
-    }
+    // if (messagesCacheRef.current.has(chatId)) {
+    //   setMessages(messagesCacheRef.current.get(chatId));
+    //   return;
+    // }
 
     // ✅ cancel previous request
     if (messageAbortRef.current) {
@@ -127,17 +127,21 @@ export function MessageProvider({ children }) {
       if (!activeChat) return;
 
       const tempId = Date.now();
-
       const optimisticMessage = {
         id: tempId,
         chat_id: activeChat.id,
-        body: payload.body,
+        body: payload.get("body"),
         type,
-        file_path: payload.file_path,
+        reply_to: payload.get("reply_to"),
+        reply_message: payload.get("reply_message"),
+        file_path: payload.get("file_path"),
+        file: payload.get("file"),
+        file_name: payload.get("file")?.name,
+        file_size: payload.get("file")?.size,
         created_at: new Date().toISOString(),
         user,
         user_id: user.id,
-        is_delivered: isUserOnline(
+        is_delivered: payload.get("is_delivered") ?? isUserOnline(
           otherUser?.id
         )
           ? 1
@@ -150,7 +154,7 @@ export function MessageProvider({ children }) {
       setMessages((prev) => [...prev, optimisticMessage]);
       try {
         const response =
-          type === "file"
+          type === "file" || type === "excel"
             ? (
               await axios.post(
                 "http://localhost:8000/api/messages",
@@ -159,11 +163,37 @@ export function MessageProvider({ children }) {
                   headers: {
                     Authorization: `Bearer ${token}`,
                   },
+                  onUploadProgress: (progressEvent) => {
+                    const percentCompleted = Math.round((progressEvent.loaded * 100) / progressEvent.total);
+                    setMessages((prev) =>
+                      prev.map((m) =>
+                        m.id === tempId
+                          ? { ...m, uploadProgress: percentCompleted }
+                          : m
+                      )
+                    );
+                    console.log(messages);
+                  },
                 }
               )
             ).data
-            : await sendMessage({
-              ...payload, is_delivered: isUserOnline(otherUser?.id) ? 1 : 0, is_seen: UserExistInChat ? 1 : 0,
+            :
+
+            await sendMessage({
+              chat_id: activeChat.id,
+              body: payload.get("body"),
+              type: payload.get("type"),
+              user_id: user.id,
+              file: payload.get("file"),
+              file_path: payload.get("file_path"),
+              reply_to: payload.get("reply_to"),
+              reply_message: payload.get("reply_message"),
+              is_delivered: payload.get("is_delivered") ?? isUserOnline(
+                otherUser?.id
+              )
+                ? 1
+                : 0,
+              is_seen: UserExistInChat ? 1 : 0,
             });
 
         setMessages((prev) =>
