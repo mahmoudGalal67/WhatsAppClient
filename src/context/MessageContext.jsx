@@ -124,8 +124,22 @@ export function MessageProvider({ children }) {
   const handleSendMessage = useCallback(
 
     async (payload, type = "text") => {
-      if (!activeChat) return;
+      const payloadData = {
+        chat_id: activeChat.id,
+        body: payload.get("body"),
+        type: payload.get("type"),
+        user_id: user.id,
+        is_delivered: payload.get("is_delivered") ?? (isUserOnline(otherUser?.id) ? 1 : 0),
+        is_seen: UserExistInChat ? 1 : 0,
+      };
 
+      // Only add optional fields if they exist
+      if (payload.get("file") && payload.get("file") != 'null') payloadData.file = payload.get("file");
+      if (payload.get("file_path") && payload.get("file_path") != 'null') payloadData.file_path = payload.get("file_path");
+      if (payload.get("reply_to") && payload.get("reply_to") != 'null') payloadData.reply_to = payload.get("reply_to");
+      if (payload.get("reply_message") && payload.get("reply_message") != 'null') payloadData.reply_message = payload.get("reply_message");
+
+      if (!activeChat) return;
       const tempId = Date.now();
       const optimisticMessage = {
         id: tempId,
@@ -157,7 +171,7 @@ export function MessageProvider({ children }) {
           type === "file" || type === "excel"
             ? (
               await axios.post(
-                "http://localhost:8000/api/messages",
+                import.meta.env.VITE_API_URL + "/api/messages",
                 payload,
                 {
                   headers: {
@@ -179,22 +193,8 @@ export function MessageProvider({ children }) {
             ).data
             :
 
-            await sendMessage({
-              chat_id: activeChat.id,
-              body: payload.get("body"),
-              type: payload.get("type"),
-              user_id: user.id,
-              file: payload.get("file"),
-              file_path: payload.get("file_path"),
-              reply_to: payload.get("reply_to"),
-              reply_message: payload.get("reply_message"),
-              is_delivered: payload.get("is_delivered") ?? isUserOnline(
-                otherUser?.id
-              )
-                ? 1
-                : 0,
-              is_seen: UserExistInChat ? 1 : 0,
-            });
+            await sendMessage(payloadData);
+
 
         setMessages((prev) =>
           prev.map((m) =>

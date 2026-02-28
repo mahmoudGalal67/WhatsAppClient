@@ -131,6 +131,7 @@ export default function MessageInput({
   const submitText = useCallback(
     (e) => {
       e.preventDefault();
+      // return;
       if (!text.trim()) return;
       const formData = new FormData();
       formData.append("chat_id", chatId);
@@ -139,7 +140,6 @@ export default function MessageInput({
       formData.append("reply_to", selectedReplyMessage?.id || null);
       formData.append("reply_message", selectedReplyMessage);
       handleSendMessage(formData, 'text');
-
       setText("");
       setSelectedReplyMessage(null);
       clearSelection();

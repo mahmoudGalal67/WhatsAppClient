@@ -125,6 +125,7 @@ export function ActiveChatProvider({ children }) {
             usersInChat,
             otherUser,
             UserExistInChat,
+            setShowChat
         }),
         [
             activeChat,
@@ -133,6 +134,7 @@ export function ActiveChatProvider({ children }) {
             otherUser,
             UserExistInChat,
             openChat,
+            setShowChat
         ]
     );
 

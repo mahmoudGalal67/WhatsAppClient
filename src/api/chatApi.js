@@ -45,6 +45,11 @@ export const addChat = async (payload) => {
     return data;
 };
 
+export const addMultiChat = async (payload) => {
+    const { data } = await axiosInstance.post("/chats/multi", { user_one_id: payload.user_one_id, other_users: payload.other_users });
+    return data;
+};
+
 export const deleteChats = async (ids) => {
     const { data } = await axiosInstance.post(`/chats/delete`, { chat_ids: ids });
 };

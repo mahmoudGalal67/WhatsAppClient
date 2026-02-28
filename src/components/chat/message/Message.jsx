@@ -126,7 +126,7 @@ const Message = function Message({ message, setSelectedReplyMessage }) {
         {/* ========= content ========= */}
         <div className="flex flex-col w-full">
           {/* reply preview */}
-          {message.reply_message?.body && (
+          {message.reply_to && message.reply_to != 'null' && (
             <div className="bg-[#103E2C] w-full p-1 rounded-md border-l-3 border-green-400">
               <h3 className="text-sm text-green-400 mb-1">You</h3>
               <div className="text-sm text-gray-400 mb-1">
@@ -161,7 +161,9 @@ const Message = function Message({ message, setSelectedReplyMessage }) {
                 src={
                   message.pending
                     ? message.file_path
-                    : `${import.meta.env.VITE_APP_URL}/storage/${message.file_path}`
+                    // : `http://localhost:8000/storage/${message.file_path}`
+                    : `https://laravelwhatsappdeploy-production.up.railway.app/storage/${message.file_path}`
+
                 }
                 className="rounded-lg max-w-xs w-full"
                 loading="lazy"

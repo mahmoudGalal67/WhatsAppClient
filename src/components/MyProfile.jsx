@@ -51,7 +51,7 @@ export default function MyProfile({ myProfile, setIsMyProfile }) {
                     <div className="relative group">
                         <img
                             src={
-                                profileImage ? profileImage : myProfile?.avatar ? `http://127.0.0.1:8000/storage/${myProfile?.avatar}` : "https://cdn-icons-png.flaticon.com/512/149/149071.png"
+                                profileImage ? profileImage : myProfile?.avatar ? `${import.meta.env.VITE_APP_URL}/storage/${myProfile?.avatar}` : "https://cdn-icons-png.flaticon.com/512/149/149071.png"
                             }
                             className="w-36 h-36 rounded-full object-cover hover:cursor-pointer hover:bg-[#202c33] "
                         />

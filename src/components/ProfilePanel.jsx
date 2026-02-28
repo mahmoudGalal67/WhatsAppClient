@@ -62,8 +62,9 @@ export default function ProfilePanel({ otherUser }) {
       {/* Profile Content */}
       <div className="flex flex-col items-center py-8 border-b border-[#2a3942] relative">
         <img
-          src={otherUser?.avatar ? `http://127.0.0.1:8000/storage/${otherUser?.avatar}` : "https://cdn-icons-png.flaticon.com/512/149/149071.png"}
           className="w-36 h-36 rounded-full object-cover mb-4"
+          // src={otherUser?.avatar ? `${import.meta.env.VITE_APP_URL}/storage/${otherUser?.avatar}` : "https://cdn-icons-png.flaticon.com/512/149/149071.png"}
+          src={otherUser?.avatar ? `https://laravelwhatsappdeploy-production.up.railway.app/storage/${otherUser?.avatar}` : "https://cdn-icons-png.flaticon.com/512/149/149071.png"}
         />
         <h3 className="text-xl font-semibold">{otherUser?.name}</h3>
         <p className="text-gray-400 mt-1">{otherUser?.phone_number}</p>

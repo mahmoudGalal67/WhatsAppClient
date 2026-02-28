@@ -4,6 +4,7 @@ import { addChat, getContacts } from "../../api/chatApi";
 import Avatar from "../common/Avatar";
 import { useAuth } from "../../context/AuthContext";
 import { useChatList } from "../../context/ChatListContext";
+import ExcelUpload from "../ExcelUpload";
 
 export default function NewChatModal({ onClose }) {
     const [name, setName] = useState("");
@@ -93,7 +94,7 @@ export default function NewChatModal({ onClose }) {
                 <form onSubmit={handleSubmit} className="space-y-4">
 
                     {/* Image Upload */}
-                    <div className="flex flex-col items-center">
+                    {/* <div className="flex flex-col items-center">
                         <label className="relative cursor-pointer">
                             <div className="w-24 h-24 rounded-full bg-[#111b21] flex items-center justify-center overflow-hidden border border-[#2a3942]">
                                 {preview ? (
@@ -109,10 +110,12 @@ export default function NewChatModal({ onClose }) {
                                 className="hidden"
                             />
                         </label>
-                    </div>
-
+                    </div> */}
+                    <ExcelUpload setContacts={setContacts} setChats={setChats} />
                     {/* Name */}
-                    <div>
+                    <span className="my-2 block">OR</span>
+                    <hr />
+                    <div className="mt-3">
                         <label className="text-sm text-gray-300 block mb-1">Name</label>
                         <input
                             value={name}

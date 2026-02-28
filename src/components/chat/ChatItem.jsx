@@ -15,7 +15,7 @@ import { useAuth } from "../../context/AuthContext";
 export default function ChatItem({ chat }) {
   const { setChats } = useChatList();
   const { user } = useAuth();
-  const { activeChat, setActiveChat } = useActiveChat();
+  const { activeChat, setActiveChat, setShowChat } = useActiveChat();
   const { loadMessages, typingUser } = useMessages();
   const {
     setSelectionChatMode,
@@ -58,7 +58,7 @@ export default function ChatItem({ chat }) {
 
     setActiveChat(chat);
     loadMessages(chat.id);
-
+    setShowChat(true)
     // safer unread reset
     setChats((prev) =>
       prev.map((c) =>

@@ -33,7 +33,7 @@ function FilePreview({ message, url }) {
                             </div>
 
                             <div className="min-w-0">
-                                <p className="text-xs text-gray-400">{message?.file_name.split(".")[1]} • {(message?.file_size / 1024 / 1024).toFixed(2)} MB</p>
+                                <p className="text-xs text-gray-400">{message?.file_name?.split(".")[1]} • {(message?.file_size / 1024 / 1024).toFixed(2)} MB</p>
                                 <p className="text-sm font-medium truncate">{message?.file_name}</p>
                             </div>
                         </div>
@@ -79,7 +79,7 @@ function FilePreview({ message, url }) {
                                 disabled={message.pending}
                                 onClick={() => {
                                     const link = document.createElement("a");
-                                    link.href = `http://localhost:8000/storage/${message.file_path}`;
+                                    link.href = `${import.meta.env.VITE_APP_URL}/storage/${message.file_path}`;
                                     link.download = message.file_name || "file";
                                     document.body.appendChild(link);
                                     link.click();
